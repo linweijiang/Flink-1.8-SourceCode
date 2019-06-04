@@ -327,7 +327,7 @@ public abstract class FileSystem {
 			final URI uri;
 
 			if (fsUri.getScheme() != null) {
-				uri = fsUri;
+				uri = fsUri; //执行这个
 			}
 			else {
 				// Apply the default fs scheme
