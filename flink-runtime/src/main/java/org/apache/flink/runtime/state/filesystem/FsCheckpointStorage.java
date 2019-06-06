@@ -100,6 +100,13 @@ public class FsCheckpointStorage extends AbstractFsCheckpointStorage {
 		return true;
 	}
 
+	/**
+	 * 初始化checkpoint的file dir
+	 * 由于checkpoint已经是规范的（不然不会启动）,所以相比于savepoint，这里少了一些对dir的校验
+	 * @param checkpointId The ID (logical timestamp) of the checkpoint that should be persisted.
+	 * @return
+	 * @throws IOException
+	 */
 	@Override
 	public CheckpointStorageLocation initializeLocationForCheckpoint(long checkpointId) throws IOException {
 		checkArgument(checkpointId >= 0);
@@ -124,7 +131,7 @@ public class FsCheckpointStorage extends AbstractFsCheckpointStorage {
 			long checkpointId,
 			CheckpointStorageLocationReference reference) throws IOException {
 
-		if (reference.isDefaultReference()) {
+		if (reference.isDefaultReference()) { //TO-DO 查看怎么设置默认的：是有设置的，如果是有设置savepoint dir，那么reference就有值
 			// default reference, construct the default location for that particular checkpoint
 			final Path checkpointDir = createCheckpointDirectory(checkpointsDirectory, checkpointId);
 
@@ -136,7 +143,7 @@ public class FsCheckpointStorage extends AbstractFsCheckpointStorage {
 					reference,
 					fileSizeThreshold);
 		}
-		else {
+		else { //savepoint会执行else操作
 			// location encoded in the reference
 			final Path path = decodePathFromReference(reference);
 

@@ -925,6 +925,14 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId> implements JobMast
 		return CompletableFuture.completedFuture(ArchivedExecutionGraph.createFrom(executionGraph));
 	}
 
+	/**
+	 * savepoint的入口
+	 * @param targetDirectory to which to write the savepoint data or null if the
+	 *                           default savepoint directory should be used
+	 * @param cancelJob
+	 * @param timeout for the rpc call
+	 * @return
+	 */
 	@Override
 	public CompletableFuture<String> triggerSavepoint(
 			@Nullable final String targetDirectory,
@@ -944,19 +952,19 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId> implements JobMast
 					"default via key '" + CheckpointingOptions.SAVEPOINT_DIRECTORY.key() + "'."));
 		}
 
-		if (cancelJob) {
+		if (cancelJob) { //停止checkpoint的调度
 			checkpointCoordinator.stopCheckpointScheduler();
 		}
 		return checkpointCoordinator
-			.triggerSavepoint(System.currentTimeMillis(), targetDirectory)
-			.thenApply(CompletedCheckpoint::getExternalPointer)
+			.triggerSavepoint(System.currentTimeMillis(), targetDirectory) //通过checkpointCoordinator 触发 savepoint
+			.thenApply(CompletedCheckpoint::getExternalPointer) //返回savepoint的dir路径
 			.handleAsync((path, throwable) -> {
-				if (throwable != null) {
-					if (cancelJob) {
+				if (throwable != null) { //如果抛异常了
+					if (cancelJob) { //则重新启动 checkpoint 调度
 						startCheckpointScheduler(checkpointCoordinator);
 					}
 					throw new CompletionException(throwable);
-				} else if (cancelJob) {
+				} else if (cancelJob) { //否则触发savepoint成功
 					log.info("Savepoint stored in {}. Now cancelling {}.", path, jobGraph.getJobID());
 					cancel(timeout);
 				}

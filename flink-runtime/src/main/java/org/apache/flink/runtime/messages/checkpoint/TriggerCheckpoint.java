@@ -28,6 +28,8 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
  * This message is sent from the {@link org.apache.flink.runtime.jobmaster.JobMaster} to the
  * {@link org.apache.flink.runtime.taskexecutor.TaskExecutor} to tell a certain task to trigger its
  * checkpoint.
+ *
+ * 通过actor触发taskExecutor执行checkpoint的消息
  */
 public class TriggerCheckpoint extends AbstractCheckpointMessage {
 

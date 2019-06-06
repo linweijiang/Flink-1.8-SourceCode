@@ -243,8 +243,8 @@ public class Task implements Runnable, TaskActions, CheckpointListener {
 	/** atomic flag that makes sure the invokable is canceled exactly once upon error. */
 	private final AtomicBoolean invokableHasBeenCanceled;
 
-	/** The invokable of this task, if initialized. All accesses must copy the reference and
-	 * check for null, as this field is cleared as part of the disposal logic. */
+	/** The invokable of this task, if initialized. //如果已经初始化了，那么则可以调用
+	 * All accesses must copy the reference and check for null, as this field is cleared as part of the disposal logic. //所有的访问都必须复制该引用和检查是否为空，以为赋值为空也在处理的逻辑中*/
 	@Nullable
 	private volatile AbstractInvokable invokable;
 
@@ -1139,6 +1139,7 @@ public class Task implements Runnable, TaskActions, CheckpointListener {
 
 	/**
 	 * Calls the invokable to trigger a checkpoint.
+	 * 调用invokable来触发checkpoint
 	 *
 	 * @param checkpointID The ID identifying the checkpoint.
 	 * @param checkpointTimestamp The timestamp associated with the checkpoint.
@@ -1162,12 +1163,12 @@ public class Task implements Runnable, TaskActions, CheckpointListener {
 			Runnable runnable = new Runnable() {
 				@Override
 				public void run() {
-					// set safety net from the task's context for checkpointing thread
+					// set safety net from the task's context for checkpointing thread //从task的上下文中 添加一个安全的网络线程 用来执行checkpoint
 					LOG.debug("Creating FileSystem stream leak safety net for {}", Thread.currentThread().getName());
 					FileSystemSafetyNet.setSafetyNetCloseableRegistryForThread(safetyNetCloseableRegistry);
 
 					try {
-						boolean success = invokable.triggerCheckpoint(checkpointMetaData, checkpointOptions);
+						boolean success = invokable.triggerCheckpoint(checkpointMetaData, checkpointOptions); //正真的task的执行checkpoint
 						if (!success) {
 							checkpointResponder.declineCheckpoint(
 									getJobID(), getExecutionId(), checkpointID,

@@ -694,10 +694,10 @@ public class TaskExecutor extends RpcEndpoint implements TaskExecutorGateway {
 			CheckpointOptions checkpointOptions) {
 		log.debug("Trigger checkpoint {}@{} for {}.", checkpointId, checkpointTimestamp, executionAttemptID);
 
-		final Task task = taskSlotTable.getTask(executionAttemptID);
+		final Task task = taskSlotTable.getTask(executionAttemptID); //获取到对应的task
 
 		if (task != null) {
-			task.triggerCheckpointBarrier(checkpointId, checkpointTimestamp, checkpointOptions);
+			task.triggerCheckpointBarrier(checkpointId, checkpointTimestamp, checkpointOptions); // 到task层级的checkpoint和barrier
 
 			return CompletableFuture.completedFuture(Acknowledge.get());
 		} else {

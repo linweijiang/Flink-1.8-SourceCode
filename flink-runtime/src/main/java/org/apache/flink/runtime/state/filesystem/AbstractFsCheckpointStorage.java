@@ -111,10 +111,15 @@ public abstract class AbstractFsCheckpointStorage implements CheckpointStorage {
 
 	/**
 	 * Creates a file system based storage location for a savepoint.
+	 * 基于给定的存储路径 创建一个文件系统 给savepoint
 	 *
 	 * <p>This methods implements the logic that decides which location to use (given optional
 	 * parameters for a configured location and a location passed for this specific savepoint)
 	 * and how to name and initialize the savepoint directory.
+	 * 此方法实现如下逻辑：
+	 * （1）决定使用哪个位置（给定已配置位置的可选参数和为此特定保存点传递的位置）
+	 * （2）如何命名和初始化保存点目录 。
+	 *
 	 *
 	 * @param externalLocationPointer    The target location pointer for the savepoint.
 	 *                                   Must be a valid URI. Null, if not supplied.
@@ -144,19 +149,19 @@ public abstract class AbstractFsCheckpointStorage implements CheckpointStorage {
 
 		// generate the savepoint directory
 
-		final FileSystem fs = savepointBasePath.getFileSystem();
+		final FileSystem fs = savepointBasePath.getFileSystem(); // 也是去获取dir对应的filesystem
 		final String prefix = "savepoint-" + jobId.toString().substring(0, 6) + '-';
 
 		Exception latestException = null;
-		for (int attempt = 0; attempt < 10; attempt++) {
-			final Path path = new Path(savepointBasePath, FileUtils.getRandomFilename(prefix));
+		for (int attempt = 0; attempt < 10; attempt++) { //尝试10次去创建savepoint的dir
+			final Path path = new Path(savepointBasePath, FileUtils.getRandomFilename(prefix)); //获取完整的文件路径 和 文件名
 
 			try {
 				if (fs.mkdirs(path)) {
 					// we make the path qualified, to make it independent of default schemes and authorities
 					final Path qp = path.makeQualified(fs);
 
-					return createSavepointLocation(fs, qp);
+					return createSavepointLocation(fs, qp); //创建文件夹
 				}
 			} catch (Exception e) {
 				latestException = e;
@@ -307,6 +312,8 @@ public abstract class AbstractFsCheckpointStorage implements CheckpointStorage {
 	 * @return The path decoded from the reference.
 	 *
 	 * @throws IllegalArgumentException Thrown, if the bytes do not represent a proper reference.
+	 *
+	 * 其实就是通过reference得到对应的存储dir Path
 	 */
 	public static Path decodePathFromReference(CheckpointStorageLocationReference reference) {
 		if (reference.isDefaultReference()) {
@@ -324,7 +331,7 @@ public abstract class AbstractFsCheckpointStorage implements CheckpointStorage {
 				}
 			}
 
-			// covert to string and path
+			// covert to string and path //将String变成Path对象
 			try {
 				return new Path(new String(bytes, headerLen, bytes.length - headerLen, StandardCharsets.UTF_8));
 			}

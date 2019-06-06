@@ -954,6 +954,7 @@ public class Execution implements AccessExecution, Archiveable<ArchivedExecution
 
 	/**
 	 * Trigger a new checkpoint on the task of this execution.
+	 * 在execution上触发task的checkpoint
 	 *
 	 * @param checkpointId of th checkpoint to trigger
 	 * @param timestamp of the checkpoint to trigger
@@ -963,7 +964,7 @@ public class Execution implements AccessExecution, Archiveable<ArchivedExecution
 		final LogicalSlot slot = assignedResource;
 
 		if (slot != null) {
-			final TaskManagerGateway taskManagerGateway = slot.getTaskManagerGateway();
+			final TaskManagerGateway taskManagerGateway = slot.getTaskManagerGateway(); //通过LogicSlot获取到TaskManager的网关，以便可以与TaskManager进行通信
 
 			taskManagerGateway.triggerCheckpoint(attemptId, getVertex().getJobId(), checkpointId, timestamp, checkpointOptions);
 		} else {

@@ -137,6 +137,8 @@ public interface TaskManagerGateway {
 	 * @param checkpointId of the checkpoint to trigger
 	 * @param timestamp of the checkpoint to trigger
 	 * @param checkpointOptions of the checkpoint to trigger
+	 *
+	 * {@link org.apache.flink.runtime.taskexecutor.TaskExecutor#triggerCheckpoint}
 	 */
 	void triggerCheckpoint(
 		ExecutionAttemptID executionAttemptID,

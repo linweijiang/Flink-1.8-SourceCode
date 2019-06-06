@@ -34,6 +34,9 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
  * extra information is needed to determine where the checkpoints should be stored
  * (all information can be derived from the configuration and the checkpoint id).
  *
+ * 一个存储位置的引用。这个是state存储位置的字节数组的包装器。
+ * 这会有特殊的处理如果'default location'有设置的话，当不需要额外信息来确定checkpoint应存储的位置时，这可以用来优化state backends
+ *
  * <h3>Why is this simply a byte array?</h3>
  *
  * <p>The reference is represented via raw bytes, which are subject to interpretation
@@ -42,6 +45,10 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
  * network streams (byte buffers) and barriers. We may ultimately add some more typing
  * if we simply keep the byte buffers for the checkpoint barriers and forward them,
  * thus saving decoding and re-encoding these references repeatedly.
+ *
+ * 引用是通过原始字节表示的，这些字节由状态后端进行解释。
+ * 我们在中间没有添加任何类型和序列化抽象，因为这些类型需要在网络流(字节缓冲区)和barriers之间快速序列化/反序列化。
+ * 如果我们简单地保留checkpoint barriers的字节缓冲区并转发它们，这样就可以重复地保存解码和重新编码这些引用，那么最终我们可能会添加更多的类型。
  */
 public class CheckpointStorageLocationReference implements java.io.Serializable {
 

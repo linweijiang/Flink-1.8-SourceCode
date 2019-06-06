@@ -326,8 +326,8 @@ public abstract class FileSystem {
 		try {
 			final URI uri;
 
-			if (fsUri.getScheme() != null) {
-				uri = fsUri; //执行这个
+			if (fsUri.getScheme() != null) { //执行这个
+				uri = fsUri;
 			}
 			else {
 				// Apply the default fs scheme
@@ -362,7 +362,7 @@ public abstract class FileSystem {
 				}
 			}
 
-			// print a helpful pointer for malformed local URIs (happens a lot to new users)
+			// print a helpful pointer for malformed local URIs (happens a lot to new users) //file系统的
 			if (uri.getScheme().equals("file") && uri.getAuthority() != null && !uri.getAuthority().isEmpty()) {
 				String supposedUri = "file:///" + uri.getAuthority() + uri.getPath();
 
@@ -394,9 +394,9 @@ public abstract class FileSystem {
 			if (factory != null) {
 				fs = factory.create(uri);
 			}
-			else {
+			else { //hdfs savepoint执行这个
 				try {
-					fs = FALLBACK_FACTORY.create(uri);
+					fs = FALLBACK_FACTORY.create(uri); //enter
 				}
 				catch (UnsupportedFileSystemSchemeException e) {
 					throw new UnsupportedFileSystemSchemeException(

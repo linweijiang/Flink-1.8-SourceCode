@@ -254,7 +254,7 @@ public abstract class StreamTask<OUT, OP extends StreamOperator<OUT>>
 			asynchronousCheckpointExceptionHandler = new AsyncCheckpointExceptionHandler(this);
 
 			stateBackend = createStateBackend();
-			checkpointStorage = stateBackend.createCheckpointStorage(getEnvironment().getJobID());
+			checkpointStorage = stateBackend.createCheckpointStorage(getEnvironment().getJobID()); //从当前上下文环境通过jobId获取checkpointStorage的信息
 
 			// if the clock is not already set, then assign a default TimeServiceProvider
 			if (timerService == null) {
@@ -635,7 +635,7 @@ public abstract class StreamTask<OUT, OP extends StreamOperator<OUT>>
 				// checkpoint alignments
 
 				// Step (1): Prepare the checkpoint, allow operators to do some pre-barrier work. //准备checkpoint，允许operator做一些barrier之前的内容
-				//           The pre-barrier work should be nothing or minimal in the common case. //barri之前的工作 应该是没有或者最小的在一般情况下
+				//           The pre-barrier work should be nothing or minimal in the common case. //barrier之前的工作 应该是没有或者最小的在一般情况下
 				operatorChain.prepareSnapshotPreBarrier(checkpointMetaData.getCheckpointId());
 
 				// Step (2): Send the checkpoint barrier downstream //发送一个barrier到下游

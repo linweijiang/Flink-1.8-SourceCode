@@ -156,7 +156,7 @@ public class HadoopFsFactory implements FileSystemFactory {
 			// -- (5) configure the Hadoop file system
 
 			try {
-				hadoopFs.initialize(initUri, hadoopConfig);
+				hadoopFs.initialize(initUri, hadoopConfig); //TODO exception here
 			}
 			catch (UnknownHostException e) {
 				String message = "The Hadoop file system's authority (" + initUri.getAuthority() +

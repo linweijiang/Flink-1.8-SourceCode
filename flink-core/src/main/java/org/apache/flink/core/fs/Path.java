@@ -423,6 +423,7 @@ public class Path implements IOReadableWritable, Serializable {
 
 	/**
 	 * Returns a qualified path object.
+	 * 规范化路径
 	 *
 	 * @param fs
 	 *        the FileSystem that should be used to obtain the current working directory

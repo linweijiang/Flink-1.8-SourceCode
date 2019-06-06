@@ -102,6 +102,8 @@ public class MasterHooks {
 	/**
 	 * Triggers all given master hooks and returns state objects for each hook that
 	 * produced a state.
+	 * 通过所有master的hook 并 返回每个hook的状态
+	 * TODO master hooks具体是干什么的？
 	 *
 	 * @param hooks The hooks to trigger
 	 * @param checkpointId The checkpoint ID of the triggering checkpoint

@@ -41,16 +41,24 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
  * <p>This is tightly integrated with the {@link CheckpointCoordinator} in
  * order to ease the gathering of fine-grained statistics.
  *
+ * 这与{@link CheckpointCoordinator}紧密集成，以便于收集细粒度的统计信息。
+ *
  * <p>The tracked stats include summary counts, a detailed history of recent
  * and in progress checkpoints as well as summaries about the size, duration
  * and more of recent checkpoints.
+ *
+ * 跟踪的统计数据包括摘要计数(summary counts)，最近和正在进行的checkpoints的详细历史记录以及有关最近checkpoints的大小、持续时间和更多内容的摘要。
  *
  * <p>Data is gathered via callbacks in the {@link CheckpointCoordinator} and
  * related classes like {@link PendingCheckpoint} and {@link CompletedCheckpoint},
  * which receive the raw stats data in the first place.
  *
+ * 数据通过{@link CheckpointCoordinator}中的回调以及{@link PendingCheckpoint}和{@link CompletedCheckpoint}之类的相关类收集，这些类首先接收原始统计数据。
+ *
  * <p>The statistics are accessed via {@link #createSnapshot()} and exposed via
  * both the web frontend and the {@link Metric} system.
+ *
+ * 统计信息可通过{@link #createSnapshot（）}访问，并通过Web前端和{@link Metric}系统公开。
  */
 public class CheckpointStatsTracker {
 

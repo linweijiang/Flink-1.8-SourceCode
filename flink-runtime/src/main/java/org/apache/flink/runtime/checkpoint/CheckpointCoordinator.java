@@ -363,14 +363,17 @@ public class CheckpointCoordinator {
 	 *                               specified and no default savepoint directory has been
 	 *                               configured
 	 * savepoint的触发也是ckc来触发的
+	 *
+	 * 其实从这里看出来，savepoint和checkpoint区别根本就不大
+	 * 不像wuchong翻译的博客里说的checkpoint注重恢复、savepoint注重移植
 	 */
 	public CompletableFuture<CompletedCheckpoint> triggerSavepoint(
 			long timestamp,
 			@Nullable String targetLocation) {
 
-		CheckpointProperties props = CheckpointProperties.forSavepoint();
+		CheckpointProperties props = CheckpointProperties.forSavepoint(); //得到savepoint预设定的prop
 
-		CheckpointTriggerResult triggerResult = triggerCheckpoint(
+		CheckpointTriggerResult triggerResult = triggerCheckpoint( //最终还是调用的checkpoint，但是多了个savepoint的参数
 			timestamp,
 			props,
 			targetLocation,
@@ -475,7 +478,7 @@ public class CheckpointCoordinator {
 						job);
 				return new CheckpointTriggerResult(CheckpointDeclineReason.NOT_ALL_REQUIRED_TASKS_RUNNING);
 			} else if (ee.getState() == ExecutionState.RUNNING) {
-				executions[i] = ee;
+				executions[i] = ee; //并保存所有task的信息，用于后续for循环触发checkpoint
 			} else {
 				LOG.info("Checkpoint triggering task {} of job {} is not in state {} but {} instead. Aborting checkpoint.",
 						tasksToTrigger[i].getTaskNameWithSubtaskIndex(),
@@ -502,11 +505,11 @@ public class CheckpointCoordinator {
 			}
 		}
 
-		// we will actually trigger this checkpoint!  //从下面开始将会触发ck
+		// we will actually trigger this checkpoint!  //从下面开始一定会触发ck
 
 		// we lock with a special lock to make sure that trigger requests do not overtake each other. //使用一个特殊的锁来锁定，以确保触发请求不会相互影响。
-		// this is not done with the coordinator-wide lock, because the 'checkpointIdCounter'
-		// may issue blocking operations. Using a different lock than the coordinator-wide lock,
+		// this is not done with the coordinator-wide lock, because the 'checkpointIdCounter' //这里说明了为什么不使用 coordinator-wide 锁原因：因为'checkpointIdCounter'可能会发出阻塞操作。
+		// may issue blocking operations. Using a different lock than the coordinator-wide lock, //使用与coordinator-wide锁不同的锁，避免了在此期间阻止'确认/拒绝'的请求。
 		// we avoid blocking the processing of 'acknowledge/decline' messages during that time.
 		synchronized (triggerLock) {
 
@@ -514,12 +517,12 @@ public class CheckpointCoordinator {
 			final long checkpointID;
 
 			try {
-				// this must happen outside the coordinator-wide lock, because it communicates
+				// this must happen outside the coordinator-wide lock, because it communicates //这必须在 coordinator-wide 锁外发生，否则它与外部服务的通信（在HA模式下）可能会阻塞一段时间。
 				// with external services (in HA mode) and may block for a while.
 				checkpointID = checkpointIdCounter.getAndIncrement();
 
-				checkpointStorageLocation = props.isSavepoint() ?
-						checkpointStorage.initializeLocationForSavepoint(checkpointID, externalSavepointLocation) :
+				checkpointStorageLocation = props.isSavepoint() ? //获取 savepoint /  checkpoint 的存储dir
+						checkpointStorage.initializeLocationForSavepoint(checkpointID, externalSavepointLocation) : //这里为什么不会报错？因为该操作是在master上操作都，master我们没有初始化Kafka的SASL/PLAIN信息到JVM中，所以不会校验到报错信息
 						checkpointStorage.initializeLocationForCheckpoint(checkpointID);
 			}
 			catch (Throwable t) {
@@ -531,7 +534,7 @@ public class CheckpointCoordinator {
 				return new CheckpointTriggerResult(CheckpointDeclineReason.EXCEPTION);
 			}
 
-			final PendingCheckpoint checkpoint = new PendingCheckpoint(
+			final PendingCheckpoint checkpoint = new PendingCheckpoint( //待定的checkpoint，当所有task ack完成后就变成了CompletedCheckpoint（参照官网checkpoint过程就知道了）
 				job,
 				checkpointID,
 				timestamp,
@@ -540,16 +543,16 @@ public class CheckpointCoordinator {
 				checkpointStorageLocation,
 				executor);
 
-			if (statsTracker != null) {
+			if (statsTracker != null) { 	//checkpoint信息的采集
 				PendingCheckpointStats callback = statsTracker.reportPendingCheckpoint(
 					checkpointID,
 					timestamp,
 					props);
 
-				checkpoint.setStatsCallback(callback);
+				checkpoint.setStatsCallback(callback); //添加回调函数，用于state都保存完成了之后调用保存的操作？？
 			}
 
-			// schedule the timer that will clean up the expired checkpoints
+			// schedule the timer that will clean up the expired checkpoints //调度timer清除过期的checkpoint
 			final Runnable canceller = () -> {
 				synchronized (lock) {
 					// only do the work if the checkpoint is not discarded anyways
@@ -567,9 +570,9 @@ public class CheckpointCoordinator {
 			};
 
 			try {
-				// re-acquire the coordinator-wide lock
+				// re-acquire the coordinator-wide lock //重新获得 coordinator-wide 锁
 				synchronized (lock) {
-					// since we released the lock in the meantime, we need to re-check
+					// since we released the lock in the meantime, we need to re-check //因为我们在此期间释放了锁，所以需要重新检查条件是否仍然存在。
 					// that the conditions still hold.
 					if (shutdown) {
 						return new CheckpointTriggerResult(CheckpointDeclineReason.COORDINATOR_SHUTDOWN);
@@ -608,39 +611,43 @@ public class CheckpointCoordinator {
 						}
 					}
 
+					//==================================================
+					// 开始触发checkpoint
+					//==================================================
+
 					LOG.info("Triggering checkpoint {} @ {} for job {}.", checkpointID, timestamp, job);
 
-					pendingCheckpoints.put(checkpointID, checkpoint);
+					pendingCheckpoints.put(checkpointID, checkpoint); //记录checkpoint信息到pendingCheckpoint
 
-					ScheduledFuture<?> cancellerHandle = timer.schedule(
+					ScheduledFuture<?> cancellerHandle = timer.schedule( //checkpoint超时处理器
 							canceller,
 							checkpointTimeout, TimeUnit.MILLISECONDS);
 
-					if (!checkpoint.setCancellerHandle(cancellerHandle)) {
+					if (!checkpoint.setCancellerHandle(cancellerHandle)) { //设置超时处理
 						// checkpoint is already disposed!
 						cancellerHandle.cancel(false);
 					}
 
-					// trigger the master hooks for the checkpoint
+					// trigger the master hooks for the checkpoint //作用：开始触发checkpoint，即开始记录最新从source的offset，然后不断保存下游的状态等，等到所有sink ack后，保存信息，在此期间如果有state的话，则将信息保存到state中
 					final List<MasterState> masterStates = MasterHooks.triggerMasterHooks(masterHooks.values(),
 							checkpointID, timestamp, executor, Time.milliseconds(checkpointTimeout));
 					for (MasterState s : masterStates) {
-						checkpoint.addMasterState(s);
+						checkpoint.addMasterState(s); //pendingCheckpoint保存所有master的state
 					}
 				}
 				// end of lock scope
 
-				final CheckpointOptions checkpointOptions = new CheckpointOptions(
+				final CheckpointOptions checkpointOptions = new CheckpointOptions( //checkpoint的信息：checkpoint/savepoint、state dir
 						props.getCheckpointType(),
 						checkpointStorageLocation.getLocationReference());
 
-				// send the messages to the tasks that trigger their checkpoint
+				// send the messages to the tasks that trigger their checkpoint //发送消息去触发task的checkpoint
 				for (Execution execution: executions) {
-					execution.triggerCheckpoint(checkpointID, timestamp, checkpointOptions);
+					execution.triggerCheckpoint(checkpointID, timestamp, checkpointOptions); //TODO 不需将task的state保存起来？task的是直接保存到dir上的？
 				}
 
 				numUnsuccessfulCheckpointsTriggers.set(0);
-				return new CheckpointTriggerResult(checkpoint);
+				return new CheckpointTriggerResult(checkpoint); //checkpoint完成
 			}
 			catch (Throwable t) {
 				// guard the map against concurrent modifications
@@ -1197,6 +1204,10 @@ public class CheckpointCoordinator {
 		}
 	}
 
+	/**
+	 * 如果触发了savepoint且有canal job的参数
+	 * 则停止checkpointScheduler
+	 */
 	public void stopCheckpointScheduler() {
 		synchronized (lock) {
 			triggerRequestQueued = false;
