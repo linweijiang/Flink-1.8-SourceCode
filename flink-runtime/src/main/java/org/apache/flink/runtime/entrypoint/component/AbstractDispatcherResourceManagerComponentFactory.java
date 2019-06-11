@@ -119,27 +119,27 @@ public abstract class AbstractDispatcherResourceManagerComponentFactory<T extend
 
 			resourceManagerRetrievalService = highAvailabilityServices.getResourceManagerLeaderRetriever();
 
-			final LeaderGatewayRetriever<DispatcherGateway> dispatcherGatewayRetriever = new RpcGatewayRetriever<>(
+			final LeaderGatewayRetriever<DispatcherGateway> dispatcherGatewayRetriever = new RpcGatewayRetriever<>( //调度管理网关
 				rpcService,
 				DispatcherGateway.class,
 				DispatcherId::fromUuid,
 				10,
 				Time.milliseconds(50L));
 
-			final LeaderGatewayRetriever<ResourceManagerGateway> resourceManagerGatewayRetriever = new RpcGatewayRetriever<>(
+			final LeaderGatewayRetriever<ResourceManagerGateway> resourceManagerGatewayRetriever = new RpcGatewayRetriever<>( //RPC网关
 				rpcService,
 				ResourceManagerGateway.class,
 				ResourceManagerId::fromUuid,
 				10,
 				Time.milliseconds(50L));
 
-			final ExecutorService executor = WebMonitorEndpoint.createExecutorService(
+			final ExecutorService executor = WebMonitorEndpoint.createExecutorService( //web 监控
 				configuration.getInteger(RestOptions.SERVER_NUM_THREADS),
 				configuration.getInteger(RestOptions.SERVER_THREAD_PRIORITY),
 				"DispatcherRestEndpoint");
 
 			final long updateInterval = configuration.getLong(MetricOptions.METRIC_FETCHER_UPDATE_INTERVAL);
-			final MetricFetcher metricFetcher = updateInterval == 0
+			final MetricFetcher metricFetcher = updateInterval == 0 //metric
 				? VoidMetricFetcher.INSTANCE
 				: MetricFetcherImpl.fromConfiguration(
 					configuration,
@@ -147,7 +147,7 @@ public abstract class AbstractDispatcherResourceManagerComponentFactory<T extend
 					dispatcherGatewayRetriever,
 					executor);
 
-			webMonitorEndpoint = restEndpointFactory.createRestEndpoint(
+			webMonitorEndpoint = restEndpointFactory.createRestEndpoint( //rest请求
 				configuration,
 				dispatcherGatewayRetriever,
 				resourceManagerGatewayRetriever,
@@ -167,7 +167,7 @@ public abstract class AbstractDispatcherResourceManagerComponentFactory<T extend
 				hostname,
 				ConfigurationUtils.getSystemResourceMetricsProbingInterval(configuration));
 
-			resourceManager = resourceManagerFactory.createResourceManager(
+			resourceManager = resourceManagerFactory.createResourceManager( //创建资源管理
 				configuration,
 				ResourceID.generate(),
 				rpcService,
@@ -179,9 +179,9 @@ public abstract class AbstractDispatcherResourceManagerComponentFactory<T extend
 				webMonitorEndpoint.getRestBaseUrl(),
 				jobManagerMetricGroup);
 
-			final HistoryServerArchivist historyServerArchivist = HistoryServerArchivist.createHistoryServerArchivist(configuration, webMonitorEndpoint);
+			final HistoryServerArchivist historyServerArchivist = HistoryServerArchivist.createHistoryServerArchivist(configuration, webMonitorEndpoint); //history server
 
-			dispatcher = dispatcherFactory.createDispatcher(
+			dispatcher = dispatcherFactory.createDispatcher( //创建调度器
 				configuration,
 				rpcService,
 				highAvailabilityServices,
@@ -202,7 +202,7 @@ public abstract class AbstractDispatcherResourceManagerComponentFactory<T extend
 			dispatcher.start();
 			dispatcherLeaderRetrievalService.start(dispatcherGatewayRetriever);
 
-			return createDispatcherResourceManagerComponent(
+			return createDispatcherResourceManagerComponent( //最终返回一个资源调度器 org.apache.flink.runtime.entrypoint.component.DispatcherResourceManagerComponent.DispatcherResourceManagerComponent
 				dispatcher,
 				resourceManager,
 				dispatcherLeaderRetrievalService,

@@ -28,7 +28,7 @@ import org.apache.flink.runtime.util.JvmShutdownSafeguard;
 import org.apache.flink.runtime.util.SignalHandler;
 
 /**
- * Entry point for the standalone session cluster.
+ * Entry point for the standalone session cluster. //standalone jobmanager的启动类
  */
 public class StandaloneSessionClusterEntrypoint extends SessionClusterEntrypoint {
 
@@ -62,6 +62,6 @@ public class StandaloneSessionClusterEntrypoint extends SessionClusterEntrypoint
 
 		StandaloneSessionClusterEntrypoint entrypoint = new StandaloneSessionClusterEntrypoint(configuration);
 
-		ClusterEntrypoint.runClusterEntrypoint(entrypoint);
+		ClusterEntrypoint.runClusterEntrypoint(entrypoint); //这里
 	}
 }
