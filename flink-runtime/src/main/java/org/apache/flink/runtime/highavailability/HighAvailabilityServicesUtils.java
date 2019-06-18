@@ -80,7 +80,7 @@ public class HighAvailabilityServicesUtils {
 		Executor executor,
 		AddressResolution addressResolution) throws Exception {
 
-		HighAvailabilityMode highAvailabilityMode = LeaderRetrievalUtils.getRecoveryMode(configuration);
+		HighAvailabilityMode highAvailabilityMode = LeaderRetrievalUtils.getRecoveryMode(configuration); //高可用恢复模式
 
 		switch (highAvailabilityMode) {
 			case NONE:

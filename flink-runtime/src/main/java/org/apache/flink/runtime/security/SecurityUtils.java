@@ -52,6 +52,7 @@ public class SecurityUtils {
 
 	/**
 	 * Installs a process-wide security configuration.
+	 * 在提交job或者其他操作之前，先进行安全认证
 	 *
 	 * <p>Applies the configuration using the available security modules (i.e. Hadoop, JAAS).
 	 */

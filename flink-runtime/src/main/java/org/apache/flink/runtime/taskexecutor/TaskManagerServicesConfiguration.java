@@ -207,7 +207,7 @@ public class TaskManagerServicesConfiguration {
 	// --------------------------------------------------------------------------------------------
 
 	/**
-	 * Utility method to extract TaskManager config parameters from the configuration and to
+	 * Utility method to extract TaskManager config parameters from the configuration and to //用来提取taskmanager参数配置并校验他们的实用方法
 	 * sanity check them.
 	 *
 	 * @param configuration The configuration.

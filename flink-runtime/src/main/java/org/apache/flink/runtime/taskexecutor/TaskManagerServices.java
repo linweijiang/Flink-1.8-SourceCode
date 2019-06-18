@@ -224,10 +224,10 @@ public class TaskManagerServices {
 			long freeHeapMemoryWithDefrag,
 			long maxJvmHeapMemory) throws Exception {
 
-		// pre-start checks
+		// pre-start checks //目录检测
 		checkTempDirs(taskManagerServicesConfiguration.getTmpDirPaths());
 
-		final NetworkEnvironment network = createNetworkEnvironment(taskManagerServicesConfiguration, maxJvmHeapMemory);
+		final NetworkEnvironment network = createNetworkEnvironment(taskManagerServicesConfiguration, maxJvmHeapMemory); //先创建用于传输数据segment buffer相关的网络环境
 		network.start();
 
 		final TaskManagerLocation taskManagerLocation = new TaskManagerLocation(
@@ -235,31 +235,31 @@ public class TaskManagerServices {
 			taskManagerServicesConfiguration.getTaskManagerAddress(),
 			network.getConnectionManager().getDataPort());
 
-		// this call has to happen strictly after the network stack has been initialized
-		final MemoryManager memoryManager = createMemoryManager(taskManagerServicesConfiguration, freeHeapMemoryWithDefrag, maxJvmHeapMemory);
+		// this call has to happen strictly after the network stack has been initialized //网络堆栈初始化后，必须严格执行此调用
+		final MemoryManager memoryManager = createMemoryManager(taskManagerServicesConfiguration, freeHeapMemoryWithDefrag, maxJvmHeapMemory); //获得内存管理
 
-		// start the I/O manager, it will create some temp directories.
+		// start the I/O manager, it will create some temp directories. //异步IO管理器
 		final IOManager ioManager = new IOManagerAsync(taskManagerServicesConfiguration.getTmpDirPaths());
 
-		final BroadcastVariableManager broadcastVariableManager = new BroadcastVariableManager();
+		final BroadcastVariableManager broadcastVariableManager = new BroadcastVariableManager();//广播变量管理器
 
-		final List<ResourceProfile> resourceProfiles = new ArrayList<>(taskManagerServicesConfiguration.getNumberOfSlots());
+		final List<ResourceProfile> resourceProfiles = new ArrayList<>(taskManagerServicesConfiguration.getNumberOfSlots()); //存储slot的list
 
 		for (int i = 0; i < taskManagerServicesConfiguration.getNumberOfSlots(); i++) {
-			resourceProfiles.add(ResourceProfile.ANY);
+			resourceProfiles.add(ResourceProfile.ANY); //默认的资源描述配置
 		}
 
-		final TimerService<AllocationID> timerService = new TimerService<>(
+		final TimerService<AllocationID> timerService = new TimerService<>( //超时时间service
 			new ScheduledThreadPoolExecutor(1),
 			taskManagerServicesConfiguration.getTimerServiceShutdownTimeout());
 
 		final TaskSlotTable taskSlotTable = new TaskSlotTable(resourceProfiles, timerService);
 
-		final JobManagerTable jobManagerTable = new JobManagerTable();
+		final JobManagerTable jobManagerTable = new JobManagerTable(); //用于多个jobManagerConnection注册他们各自的job id 的容器
 
-		final JobLeaderService jobLeaderService = new JobLeaderService(taskManagerLocation, taskManagerServicesConfiguration.getRetryingRegistrationConfiguration());
+		final JobLeaderService jobLeaderService = new JobLeaderService(taskManagerLocation, taskManagerServicesConfiguration.getRetryingRegistrationConfiguration());//job的leader的监听service
 
-		final String[] stateRootDirectoryStrings = taskManagerServicesConfiguration.getLocalRecoveryStateRootDirectories();
+		final String[] stateRootDirectoryStrings = taskManagerServicesConfiguration.getLocalRecoveryStateRootDirectories();//拿到state恢复的的目录，为什么是数组，因为一个taskmanager可以执行多个job，每个job有一个dir
 
 		final File[] stateRootDirectoryFiles = new File[stateRootDirectoryStrings.length];
 
@@ -267,7 +267,7 @@ public class TaskManagerServices {
 			stateRootDirectoryFiles[i] = new File(stateRootDirectoryStrings[i], LOCAL_STATE_SUB_DIRECTORY_ROOT);
 		}
 
-		final TaskExecutorLocalStateStoresManager taskStateManager = new TaskExecutorLocalStateStoresManager(
+		final TaskExecutorLocalStateStoresManager taskStateManager = new TaskExecutorLocalStateStoresManager( //创建存储所有job的state dir的类
 			taskManagerServicesConfiguration.isLocalRecoveryEnabled(),
 			stateRootDirectoryFiles,
 			taskIOExecutor);
@@ -297,8 +297,8 @@ public class TaskManagerServices {
 			TaskManagerServicesConfiguration taskManagerServicesConfiguration,
 			long freeHeapMemoryWithDefrag,
 			long maxJvmHeapMemory) throws Exception {
-		// computing the amount of memory to use depends on how much memory is available
-		// it strictly needs to happen AFTER the network stack has been initialized
+		// computing the amount of memory to use depends on how much memory is available //计算要使用的内存量取决于可用内存量
+		// it strictly needs to happen AFTER the network stack has been initialized //它必须在网络堆栈初始化之后发生
 
 		// check if a value has been configured
 		long configuredMemory = taskManagerServicesConfiguration.getConfiguredMemory();
@@ -353,7 +353,7 @@ public class TaskManagerServices {
 		// now start the memory manager
 		final MemoryManager memoryManager;
 		try {
-			memoryManager = new MemoryManager(
+			memoryManager = new MemoryManager( //new一把MemoryManager //TO-DO 先不深入
 				memorySize,
 				taskManagerServicesConfiguration.getNumberOfSlots(),
 				taskManagerServicesConfiguration.getNetworkConfig().networkBufferSize(),
@@ -375,7 +375,7 @@ public class TaskManagerServices {
 	}
 
 	/**
-	 * Creates the {@link NetworkEnvironment} from the given {@link TaskManagerServicesConfiguration}.
+	 * Creates the {@link NetworkEnvironment} from the given {@link TaskManagerServicesConfiguration}. //基本都是网络segment buffer先关的
 	 *
 	 * @param taskManagerServicesConfiguration to construct the network environment from
 	 * @param maxJvmHeapMemory the maximum JVM heap size
@@ -386,9 +386,9 @@ public class TaskManagerServices {
 			TaskManagerServicesConfiguration taskManagerServicesConfiguration,
 			long maxJvmHeapMemory) {
 
-		NetworkEnvironmentConfiguration networkEnvironmentConfiguration = taskManagerServicesConfiguration.getNetworkConfig();
+		NetworkEnvironmentConfiguration networkEnvironmentConfiguration = taskManagerServicesConfiguration.getNetworkConfig(); //获取网络相关的配置
 
-		final long networkBuf = calculateNetworkBufferMemory(taskManagerServicesConfiguration, maxJvmHeapMemory);
+		final long networkBuf = calculateNetworkBufferMemory(taskManagerServicesConfiguration, maxJvmHeapMemory); //计算网络buffer内存
 		int segmentSize = networkEnvironmentConfiguration.networkBufferSize();
 
 		// tolerate offcuts between intended and allocated memory due to segmentation (will be available to the user-space memory)
@@ -413,7 +413,7 @@ public class TaskManagerServices {
 		}
 
 		ResultPartitionManager resultPartitionManager = new ResultPartitionManager();
-		TaskEventDispatcher taskEventDispatcher = new TaskEventDispatcher();
+		TaskEventDispatcher taskEventDispatcher = new TaskEventDispatcher(); //task任务的调度员
 
 		KvStateRegistry kvStateRegistry = new KvStateRegistry();
 
@@ -692,7 +692,7 @@ public class TaskManagerServices {
 	}
 
 	/**
-	 * Validates that all the directories denoted by the strings do actually exist or can be created, are proper
+	 * Validates that all the directories denoted by the strings do actually exist or can be created, are proper //验证所有的String目录是否是实际存在的，或者能够创建，且是正确的目录或者文件，并且是否是可写的
 	 * directories (not files), and are writable.
 	 *
 	 * @param tmpDirs The array of directory paths to check.

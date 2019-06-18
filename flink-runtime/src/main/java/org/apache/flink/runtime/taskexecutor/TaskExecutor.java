@@ -220,7 +220,7 @@ public class TaskExecutor extends RpcEndpoint implements TaskExecutorGateway {
 			BlobCacheService blobCacheService,
 			FatalErrorHandler fatalErrorHandler) {
 
-		super(rpcService, AkkaRpcServiceUtils.createRandomName(TASK_MANAGER_NAME));
+		super(rpcService, AkkaRpcServiceUtils.createRandomName(TASK_MANAGER_NAME)); //初始化Rpc，并在主线程中启动Rpc server，用于执行将来的rpc server的回调
 
 		checkArgument(taskManagerConfiguration.getNumberSlots() > 0, "The number of slots has to be larger than 0.");
 

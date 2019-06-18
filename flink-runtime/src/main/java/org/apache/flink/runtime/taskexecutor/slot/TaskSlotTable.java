@@ -48,13 +48,13 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * Container for multiple {@link TaskSlot} instances. Additionally, it maintains multiple indices
- * for faster access to tasks and sets of allocated slots.
+ * Container for multiple {@link TaskSlot} instances. Additionally, it maintains multiple indices //多个TaskSlot实例的容器。
+ * for faster access to tasks and sets of allocated slots. //此外，它包含多个索引用于更快的访问task和已分配的slots
  *
- * <p>The task slot table automatically registers timeouts for allocated slots which cannot be assigned
+ * <p>The task slot table automatically registers timeouts for allocated slots which cannot be assigned //task slot table给不能规划到job master的分配的slot自动注册超时
  * to a job manager.
  *
- * <p>Before the task slot table can be used, it must be started via the {@link #start} method.
+ * <p>Before the task slot table can be used, it must be started via the {@link #start} method. //在task slot table能用之前，必须通过调用start方法来启动
  */
 public class TaskSlotTable implements TimeoutListener<AllocationID> {
 
@@ -97,7 +97,7 @@ public class TaskSlotTable implements TimeoutListener<AllocationID> {
 
 		// create the task slots for the given resource profiles
 		for (ResourceProfile resourceProfile: resourceProfiles) {
-			taskSlots.set(index, new TaskSlot(index, resourceProfile));
+			taskSlots.set(index, new TaskSlot(index, resourceProfile));//设置taskSlot
 			++index;
 		}
 

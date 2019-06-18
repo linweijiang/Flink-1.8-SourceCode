@@ -31,12 +31,12 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Describe the immutable resource profile of the slot, either when requiring or offering it. The profile can be
- * checked whether it can match another profile's requirement, and furthermore we may calculate a matching
- * score to decide which profile we should choose when we have lots of candidate slots.
- * It should be generated from {@link ResourceSpec} with the input and output memory calculated in JobMaster.
+ * Describe the immutable resource profile of the slot, either when requiring or offering it. The profile can be //在要求或者需要提供时，描述slot不可变资源的配置
+ * checked whether it can match another profile's requirement, and furthermore we may calculate a matching //可以检查它是否跟 其他资源需求描述 是否匹配
+ * score to decide which profile we should choose when we have lots of candidate slots. //此外，我们可以计算匹配的分数以确定当我们有许多候选slot时我们应该选择哪个配置文件。
+ * It should be generated from {@link ResourceSpec} with the input and output memory calculated in JobMaster. //它应该由JobMaster通过计算内存的input和output的后 从 ResourceSpec生成
  *
- * <p>Resource Profiles have a total ordering, defined by comparing these fields in sequence:
+ * <p>Resource Profiles have a total ordering, defined by comparing these fields in sequence: //资源配置描述是有序的，通过按顺序比较这些字段来定义
  * <ol>
  *     <li>Memory Size</li>
  *     <li>CPU cores</li>

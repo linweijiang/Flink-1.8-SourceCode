@@ -75,8 +75,8 @@ import java.util.concurrent.TimeUnit;
 import static org.apache.flink.util.Preconditions.checkNotNull;
 
 /**
- * This class is the executable entry point for the task manager in yarn or standalone mode.
- * It constructs the related components (network, I/O manager, memory manager, RPC service, HA service)
+ * This class is the executable entry point for the task manager in yarn or standalone mode. //TaskManager standalone/yarn模式的启动类
+ * It constructs the related components (network, I/O manager, memory manager, RPC service, HA service) //这里构建并启动了一些组件，有 I/O、内存管理、RPC、HA
  * and starts them.
  */
 public class TaskManagerRunner implements FatalErrorHandler, AutoCloseableAsync {
@@ -120,21 +120,21 @@ public class TaskManagerRunner implements FatalErrorHandler, AutoCloseableAsync 
 		this.configuration = checkNotNull(configuration);
 		this.resourceId = checkNotNull(resourceId);
 
-		timeout = AkkaUtils.getTimeoutAsTime(configuration);
+		timeout = AkkaUtils.getTimeoutAsTime(configuration); //超时时间
 
-		this.executor = java.util.concurrent.Executors.newScheduledThreadPool(
-			Hardware.getNumberCPUCores(),
+		this.executor = java.util.concurrent.Executors.newScheduledThreadPool( //生成可调度的线程池
+			Hardware.getNumberCPUCores(), //线程池的线程数量是硬件的CPU核数
 			new ExecutorThreadFactory("taskmanager-future"));
 
-		highAvailabilityServices = HighAvailabilityServicesUtils.createHighAvailabilityServices(
+		highAvailabilityServices = HighAvailabilityServicesUtils.createHighAvailabilityServices( //创建高可用的服务（基本都是基于zk的）
 			configuration,
 			executor,
 			HighAvailabilityServicesUtils.AddressResolution.TRY_ADDRESS_RESOLUTION);
 
-		rpcService = createRpcService(configuration, highAvailabilityServices);
-		metricQueryServiceActorSystem = MetricUtils.startMetricsActorSystem(configuration, rpcService.getAddress(), LOG);
+		rpcService = createRpcService(configuration, highAvailabilityServices); //创建rpc服务
+		metricQueryServiceActorSystem = MetricUtils.startMetricsActorSystem(configuration, rpcService.getAddress(), LOG); //Metrics相关
 
-		HeartbeatServices heartbeatServices = HeartbeatServices.fromConfiguration(configuration);
+		HeartbeatServices heartbeatServices = HeartbeatServices.fromConfiguration(configuration);//心跳service
 
 		metricRegistry = new MetricRegistryImpl(MetricRegistryConfiguration.fromConfiguration(configuration));
 
@@ -145,7 +145,7 @@ public class TaskManagerRunner implements FatalErrorHandler, AutoCloseableAsync 
 			configuration, highAvailabilityServices.createBlobStore(), null
 		);
 
-		taskManager = startTaskManager(
+		taskManager = startTaskManager( //通过上诉的一些配置和service，启动taskmanager //enter
 			this.configuration,
 			this.resourceId,
 			rpcService,
@@ -271,7 +271,7 @@ public class TaskManagerRunner implements FatalErrorHandler, AutoCloseableAsync 
 	// --------------------------------------------------------------------------------------------
 
 	public static void main(String[] args) throws Exception {
-		// startup checks and logging
+		// startup checks and logging //日志检测
 		EnvironmentInformation.logEnvironmentInfo(LOG, "TaskManager", args);
 		SignalHandler.register(LOG);
 		JvmShutdownSafeguard.installAsShutdownHook(LOG);
@@ -287,19 +287,19 @@ public class TaskManagerRunner implements FatalErrorHandler, AutoCloseableAsync 
 		final Configuration configuration = loadConfiguration(args);
 
 		try {
-			FileSystem.initialize(configuration);
+			FileSystem.initialize(configuration); //同样初始化file system
 		} catch (IOException e) {
 			throw new IOException("Error while setting the default " +
 				"filesystem scheme from configuration.", e);
 		}
 
-		SecurityUtils.install(new SecurityConfiguration(configuration));
+		SecurityUtils.install(new SecurityConfiguration(configuration)); //初始化安全配置
 
 		try {
 			SecurityUtils.getInstalledContext().runSecured(new Callable<Void>() {
 				@Override
 				public Void call() throws Exception {
-					runTaskManager(configuration, ResourceID.generate());
+					runTaskManager(configuration, ResourceID.generate()); //这里
 					return null;
 				}
 			});
@@ -331,7 +331,7 @@ public class TaskManagerRunner implements FatalErrorHandler, AutoCloseableAsync 
 	public static void runTaskManager(Configuration configuration, ResourceID resourceId) throws Exception {
 		final TaskManagerRunner taskManagerRunner = new TaskManagerRunner(configuration, resourceId);
 
-		taskManagerRunner.start();
+		taskManagerRunner.start(); //从这里启动taskManager，启动了taskmanager的RPC服务，等待jobmanager分配job
 	}
 
 	// --------------------------------------------------------------------------------------------
@@ -356,32 +356,32 @@ public class TaskManagerRunner implements FatalErrorHandler, AutoCloseableAsync 
 
 		LOG.info("Starting TaskManager with ResourceID: {}", resourceID);
 
-		InetAddress remoteAddress = InetAddress.getByName(rpcService.getAddress());
+		InetAddress remoteAddress = InetAddress.getByName(rpcService.getAddress()); //通过rpc的配置获得 连接的“句柄”
 
-		TaskManagerServicesConfiguration taskManagerServicesConfiguration =
+		TaskManagerServicesConfiguration taskManagerServicesConfiguration = //校验conf配置
 			TaskManagerServicesConfiguration.fromConfiguration(
 				configuration,
 				remoteAddress,
 				localCommunicationOnly);
 
-		TaskManagerServices taskManagerServices = TaskManagerServices.fromConfiguration(
+		TaskManagerServices taskManagerServices = TaskManagerServices.fromConfiguration( //从配置中生成TaskManagerServices（该service包含很多功能，包括网络、内存、slot、state dir、异步I/O、超时service、job leader service）
 			taskManagerServicesConfiguration,
 			resourceID,
 			rpcService.getExecutor(), // TODO replace this later with some dedicated executor for io.
 			EnvironmentInformation.getSizeOfFreeHeapMemoryWithDefrag(),
 			EnvironmentInformation.getMaxJvmHeapMemory());
 
-		TaskManagerMetricGroup taskManagerMetricGroup = MetricUtils.instantiateTaskManagerMetricGroup(
+		TaskManagerMetricGroup taskManagerMetricGroup = MetricUtils.instantiateTaskManagerMetricGroup( //metric
 			metricRegistry,
 			taskManagerServices.getTaskManagerLocation(),
 			taskManagerServices.getNetworkEnvironment(),
 			taskManagerServicesConfiguration.getSystemResourceMetricsProbingInterval());
 
-		TaskManagerConfiguration taskManagerConfiguration = TaskManagerConfiguration.fromConfiguration(configuration);
+		TaskManagerConfiguration taskManagerConfiguration = TaskManagerConfiguration.fromConfiguration(configuration); //获取taskmanager相关的conf
 
 		String metricQueryServicePath = metricRegistry.getMetricQueryServicePath();
 
-		return new TaskExecutor(
+		return new TaskExecutor(//enter 通过上面配置的rpc配置、相关service、taskManager配置、Metrics Group得到TaskExecutor对象
 			rpcService,
 			taskManagerConfiguration,
 			highAvailabilityServices,
@@ -394,7 +394,7 @@ public class TaskManagerRunner implements FatalErrorHandler, AutoCloseableAsync 
 	}
 
 	/**
-	 * Create a RPC service for the task manager.
+	 * Create a RPC service for the task manager. //创建一个rpc服务 for task manager
 	 *
 	 * @param configuration The configuration for the TaskManager.
 	 * @param haServices to use for the task manager hostname retrieval
@@ -409,7 +409,7 @@ public class TaskManagerRunner implements FatalErrorHandler, AutoCloseableAsync 
 		final String taskManagerAddress = determineTaskManagerBindAddress(configuration, haServices);
 		final String portRangeDefinition = configuration.getString(TaskManagerOptions.RPC_PORT);
 
-		return AkkaRpcServiceUtils.createRpcService(taskManagerAddress, portRangeDefinition, configuration);
+		return AkkaRpcServiceUtils.createRpcService(taskManagerAddress, portRangeDefinition, configuration); //通过taskmanager的 address/port 创建rpcService
 	}
 
 	private static String determineTaskManagerBindAddress(

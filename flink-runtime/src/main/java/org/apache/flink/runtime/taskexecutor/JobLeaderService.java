@@ -49,10 +49,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 
 /**
- * This service has the responsibility to monitor the job leaders (the job manager which is leader
- * for a given job) for all registered jobs. Upon gaining leadership for a job and detection by the
- * job leader service, the service tries to establish a connection to the job leader. After
- * successfully establishing a connection, the job leader listener is notified about the new job
+ * This service has the responsibility to monitor the job leaders (the job manager which is leader //该service有责任去监控所有已经注册的job的job leader（job manager是一个给定的job的leader）
+ * for a given job) for all registered jobs. Upon gaining leadership for a job and detection by the //在获得一个job的leadership和通过job leader service检测后，该service将会尝试去和job leader建立关系
+ * job leader service, the service tries to establish a connection to the job leader. After //在成功建立连接后，job leader监听器将会被修改成 新的job leader和新的job leader的连接
+ * successfully establishing a connection, the job leader listener is notified about the new job //如果job leader失去了leadership，那么job leader监听器也会相应修改
  * leader and its connection. In case that a job leader loses leadership, the job leader listener
  * is notified as well.
  */
@@ -91,7 +91,7 @@ public class JobLeaderService {
 
 		// Has to be a concurrent hash map because tests might access this service
 		// concurrently via containsJob
-		jobLeaderServices = new ConcurrentHashMap<>(4);
+		jobLeaderServices = new ConcurrentHashMap<>(4); //默认初始job manager的数量为4
 
 		state = JobLeaderService.State.CREATED;
 

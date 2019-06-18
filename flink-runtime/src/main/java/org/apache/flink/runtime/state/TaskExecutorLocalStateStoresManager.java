@@ -39,7 +39,7 @@ import java.util.Map;
 import java.util.concurrent.Executor;
 
 /**
- * This class holds the all {@link TaskLocalStateStoreImpl} objects for a task executor (manager).
+ * This class holds the all {@link TaskLocalStateStoreImpl} objects for a task executor (manager). //该类持有 一个task executor（manager）的所有TaskLocalStateStoreImpl对象
  */
 public class TaskExecutorLocalStateStoresManager {
 

@@ -32,9 +32,9 @@ import static org.apache.flink.util.Preconditions.checkArgument;
 import static org.apache.flink.util.Preconditions.checkNotNull;
 
 /**
- * This class encapsulates the connection information of a TaskManager.
- * It describes the host where the TaskManager operates and its server port
- * for data exchange. This class also contains utilities to work with the
+ * This class encapsulates the connection information of a TaskManager. //该类封装了TaskManager的连接信息
+ * It describes the host where the TaskManager operates and its server port //它描述了TaskManager运行的主机及其用于数据交换的服务器端口。
+ * for data exchange. This class also contains utilities to work with the //此类还包含用于处理TaskManager主机名的实用程序，该主机名用于本地化工作分配。
  * TaskManager's host name, which is used to localize work assignments.
  */
 public class TaskManagerLocation implements Comparable<TaskManagerLocation>, java.io.Serializable {
@@ -73,7 +73,7 @@ public class TaskManagerLocation implements Comparable<TaskManagerLocation>, jav
 	 * @param dataPort
 	 *        the port instance's task manager expects to receive transfer envelopes on
 	 */
-	public TaskManagerLocation(ResourceID resourceID, InetAddress inetAddress, int dataPort) {
+	public TaskManagerLocation(ResourceID resourceID, InetAddress inetAddress, int dataPort) {//见类的注释
 		// -1 indicates a local instance connection info
 		checkArgument(dataPort > 0 || dataPort == -1, "dataPort must be > 0, or -1 (local)");
 
