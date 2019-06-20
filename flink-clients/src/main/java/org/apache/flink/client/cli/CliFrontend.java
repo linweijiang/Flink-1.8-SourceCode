@@ -130,7 +130,7 @@ public class CliFrontend {
 		this.customCommandLines = Preconditions.checkNotNull(customCommandLines);
 
 		try {
-			FileSystem.initialize(this.configuration);
+			FileSystem.initialize(this.configuration); //就是这里，在提交job之前先获取到FileSystem，由于是在task初始化之前，所以不会报错
 		} catch (IOException e) {
 			throw new Exception("Error while setting the default " +
 				"filesystem scheme from configuration.", e);
@@ -173,7 +173,7 @@ public class CliFrontend {
 	// --------------------------------------------------------------------------------------------
 
 	/**
-	 * Executions the run action.
+	 * Executions the run action. //提交job来到这里
 	 *
 	 * @param args Command line arguments for the run action.
 	 */
@@ -201,7 +201,7 @@ public class CliFrontend {
 		final PackagedProgram program;
 		try {
 			LOG.info("Building program from JAR file");
-			program = buildProgram(runOptions);
+			program = buildProgram(runOptions); //可以理解为将jar封装到PackageProgram中
 		}
 		catch (FileNotFoundException e) {
 			throw new CliArgsException("Could not build the program from JAR file.", e);
@@ -210,18 +210,18 @@ public class CliFrontend {
 		final CustomCommandLine<?> customCommandLine = getActiveCustomCommandLine(commandLine);
 
 		try {
-			runProgram(customCommandLine, commandLine, runOptions, program);
+			runProgram(customCommandLine, commandLine, runOptions, program); //执行
 		} finally {
 			program.deleteExtractedLibraries();
 		}
 	}
 
-	private <T> void runProgram(
+	private <T> void runProgram( //提交任务到这里来
 			CustomCommandLine<T> customCommandLine,
 			CommandLine commandLine,
 			RunOptions runOptions,
 			PackagedProgram program) throws ProgramInvocationException, FlinkException {
-		final ClusterDescriptor<T> clusterDescriptor = customCommandLine.createClusterDescriptor(commandLine);
+		final ClusterDescriptor<T> clusterDescriptor = customCommandLine.createClusterDescriptor(commandLine); //拿到集群的描述器
 
 		try {
 			final T clusterId = customCommandLine.getClusterId(commandLine);
@@ -232,10 +232,10 @@ public class CliFrontend {
 			if (clusterId == null && runOptions.getDetachedMode()) {
 				int parallelism = runOptions.getParallelism() == -1 ? defaultParallelism : runOptions.getParallelism();
 
-				final JobGraph jobGraph = PackagedProgramUtils.createJobGraph(program, configuration, parallelism);
+				final JobGraph jobGraph = PackagedProgramUtils.createJobGraph(program, configuration, parallelism);//创建job graph
 
 				final ClusterSpecification clusterSpecification = customCommandLine.getClusterSpecification(commandLine);
-				client = clusterDescriptor.deployJobCluster(
+				client = clusterDescriptor.deployJobCluster( //将jobGraph部署到集群中？
 					clusterSpecification,
 					jobGraph,
 					runOptions.getDetachedMode());
@@ -255,8 +255,8 @@ public class CliFrontend {
 				} else {
 					// also in job mode we have to deploy a session cluster because the job
 					// might consist of multiple parts (e.g. when using collect)
-					final ClusterSpecification clusterSpecification = customCommandLine.getClusterSpecification(commandLine);
-					client = clusterDescriptor.deploySessionCluster(clusterSpecification);
+					final ClusterSpecification clusterSpecification = customCommandLine.getClusterSpecification(commandLine); //通过参数获得集群的信息
+					client = clusterDescriptor.deploySessionCluster(clusterSpecification); //得到连接集群的client
 					// if not running in detached mode, add a shutdown hook to shut down cluster if client exits
 					// there's a race-condition here if cli is killed before shutdown hook is installed
 					if (!runOptions.getDetachedMode() && runOptions.isShutdownOnAttachedExit()) {
@@ -284,7 +284,7 @@ public class CliFrontend {
 						userParallelism = defaultParallelism;
 					}
 
-					executeProgram(program, client, userParallelism);
+					executeProgram(program, client, userParallelism); //entre，提交job到集群
 				} finally {
 					if (clusterId == null && !client.isDetached()) {
 						// terminate the cluster only if we have started it before and if it's not detached
@@ -808,13 +808,13 @@ public class CliFrontend {
 	}
 
 	// --------------------------------------------------------------------------------------------
-	//  Interaction with programs and JobManager
+	//  Interaction with programs and JobManager //将程序提交到JobManager
 	// --------------------------------------------------------------------------------------------
 
 	protected void executeProgram(PackagedProgram program, ClusterClient<?> client, int parallelism) throws ProgramMissingJobException, ProgramInvocationException {
 		logAndSysout("Starting execution of program");
 
-		final JobSubmissionResult result = client.run(program, parallelism);
+		final JobSubmissionResult result = client.run(program, parallelism); //enter，提交到JobManager
 
 		if (null == result) {
 			throw new ProgramMissingJobException("No JobSubmissionResult returned, please make sure you called " +
@@ -850,7 +850,7 @@ public class CliFrontend {
 			throw new IllegalArgumentException("The program JAR file was not specified.");
 		}
 
-		File jarFile = new File(jarFilePath);
+		File jarFile = new File(jarFilePath); //拿到jar文件
 
 		// Check if JAR file exists
 		if (!jarFile.exists()) {
@@ -863,7 +863,7 @@ public class CliFrontend {
 		// Get assembler class
 		String entryPointClass = options.getEntryPointClassName();
 
-		PackagedProgram program = entryPointClass == null ?
+		PackagedProgram program = entryPointClass == null ? //主要是获取jar文件和配置好主入口类
 				new PackagedProgram(jarFile, classpaths, programArgs) :
 				new PackagedProgram(jarFile, classpaths, entryPointClass, programArgs);
 
@@ -1027,7 +1027,7 @@ public class CliFrontend {
 	// --------------------------------------------------------------------------------------------
 
 	/**
-	 * Parses the command line arguments and starts the requested action.
+	 * Parses the command line arguments and starts the requested action. //转换命令行参数并且 开始处理请求的操作
 	 *
 	 * @param args command line arguments of the client.
 	 * @return The return code of the program
@@ -1051,7 +1051,7 @@ public class CliFrontend {
 			// do action
 			switch (action) {
 				case ACTION_RUN:
-					run(params);
+					run(params); //Job提交
 					return 0;
 				case ACTION_LIST:
 					list(params);

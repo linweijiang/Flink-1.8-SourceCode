@@ -393,7 +393,7 @@ public final class InstantiationUtil {
 
 		// try to instantiate the class
 		try {
-			return clazz.newInstance();
+			return clazz.newInstance(); //实例化主类
 		}
 		catch (InstantiationException | IllegalAccessException iex) {
 			// check for the common problem causes

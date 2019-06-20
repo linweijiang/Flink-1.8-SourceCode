@@ -45,7 +45,7 @@ import java.util.Set;
 import static org.apache.flink.util.Preconditions.checkNotNull;
 
 /**
- * The JobGraph represents a Flink dataflow program, at the low level that the JobManager accepts.
+ * The JobGraph represents a Flink dataflow program, at the low level that the JobManager accepts. //JobGraph代表Flink数据流的程序，是JobManager接收job的底层形式，所有高级别的API都会转换成JobGraph
  * All programs from higher level APIs are transformed into JobGraphs.
  *
  * <p>The JobGraph is a graph of vertices and intermediate results that are connected together to

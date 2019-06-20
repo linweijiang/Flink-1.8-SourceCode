@@ -51,7 +51,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 /**
- * Client to interact with a {@link MiniCluster}.
+ * Client to interact with a {@link MiniCluster}. //local本地模式的cluster的client
  */
 public class MiniClusterClient extends ClusterClient<MiniClusterClient.MiniClusterId> implements NewClusterClient {
 

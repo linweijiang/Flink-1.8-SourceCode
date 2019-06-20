@@ -90,7 +90,7 @@ import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
 
 /**
- * Encapsulates the functionality necessary to submit a program to a remote cluster.
+ * Encapsulates the functionality necessary to submit a program to a remote cluster. //封装将程序提交到远程集群所需的功能
  *
  * @param <T> type of the cluster id
  */
@@ -381,8 +381,8 @@ public abstract class ClusterClient<T> {
 	// ------------------------------------------------------------------------
 
 	/**
-	 * General purpose method to run a user jar from the CliFrontend in either blocking or detached mode, depending
-	 * on whether {@code setDetached(true)} or {@code setDetached(false)}.
+	 * General purpose method to run a user jar from the CliFrontend in either blocking or detached mode, depending //根据是否{@code setDetached(true)} or {@code setDetached(false)}
+	 * on whether {@code setDetached(true)} or {@code setDetached(false)}. //以 阻塞 或 分离 模式从CliFrontend运行用户jar的通用方法
 	 * @param prog the packaged program
 	 * @param parallelism the parallelism to execute the contained Flink job
 	 * @return The result of the execution
@@ -391,17 +391,17 @@ public abstract class ClusterClient<T> {
 	 */
 	public JobSubmissionResult run(PackagedProgram prog, int parallelism)
 			throws ProgramInvocationException, ProgramMissingJobException {
-		Thread.currentThread().setContextClassLoader(prog.getUserCodeClassLoader());
-		if (prog.isUsingProgramEntryPoint()) {
+		Thread.currentThread().setContextClassLoader(prog.getUserCodeClassLoader()); //获取jar包的类加载器
+		if (prog.isUsingProgramEntryPoint()) { //如果已经指定了entryPoint
 
 			final JobWithJars jobWithJars;
-			if (hasUserJarsInClassPath(prog.getAllLibraries())) {
+			if (hasUserJarsInClassPath(prog.getAllLibraries())) { //用户的jar是否已经存在于client，也就是jobmanager中
 				jobWithJars = prog.getPlanWithoutJars();
 			} else {
-				jobWithJars = prog.getPlanWithJars();
+				jobWithJars = prog.getPlanWithJars(); //获得优化后的计划
 			}
 
-			return run(jobWithJars, parallelism, prog.getSavepointSettings());
+			return run(jobWithJars, parallelism, prog.getSavepointSettings()); //enter
 		}
 		else if (prog.isUsingInteractiveMode()) {
 			log.info("Starting program in interactive mode (detached: {})", isDetached());
@@ -448,7 +448,7 @@ public abstract class ClusterClient<T> {
 
 	/**
 	 * Runs a program on the Flink cluster to which this client is connected. The call blocks until the
-	 * execution is complete, and returns afterwards.
+	 * execution is complete, and returns afterwards. //在此客户端连接的Flink群集上运行程序。 调用将阻塞，直到执行完成，然后返回。
 	 *
 	 * @param jobWithJars The program to be executed.
 	 * @param parallelism The default parallelism to use when running the program. The default parallelism is used
@@ -467,8 +467,8 @@ public abstract class ClusterClient<T> {
 			throw new IllegalArgumentException("The given JobWithJars does not provide a usercode class loader.");
 		}
 
-		OptimizedPlan optPlan = getOptimizedPlan(compiler, jobWithJars, parallelism);
-		return run(optPlan, jobWithJars.getJarFiles(), jobWithJars.getClasspaths(), classLoader, savepointSettings);
+		OptimizedPlan optPlan = getOptimizedPlan(compiler, jobWithJars, parallelism); //获得执行计划
+		return run(optPlan, jobWithJars.getJarFiles(), jobWithJars.getClasspaths(), classLoader, savepointSettings); //enter
 	}
 
 	public JobSubmissionResult run(
@@ -479,8 +479,8 @@ public abstract class ClusterClient<T> {
 	public JobSubmissionResult run(FlinkPlan compiledPlan,
 			List<URL> libraries, List<URL> classpaths, ClassLoader classLoader, SavepointRestoreSettings savepointSettings)
 			throws ProgramInvocationException {
-		JobGraph job = getJobGraph(flinkConfig, compiledPlan, libraries, classpaths, savepointSettings);
-		return submitJob(job, classLoader);
+		JobGraph job = getJobGraph(flinkConfig, compiledPlan, libraries, classpaths, savepointSettings); //获得jobGraph，TO-DO：很重点！，暂时先跳过
+		return submitJob(job, classLoader); //提交Job
 	}
 
 	/**
@@ -763,7 +763,7 @@ public abstract class ClusterClient<T> {
 	// ------------------------------------------------------------------------
 
 	/**
-	 * Creates the optimized plan for a given program, using this client's compiler.
+	 * Creates the optimized plan for a given program, using this client's compiler. //创建优化后的执行计划，使用client的编译器
 	 *
 	 * @param prog The program to be compiled.
 	 * @return The compiled and optimized plan, as returned by the compiler.

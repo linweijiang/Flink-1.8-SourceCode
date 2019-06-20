@@ -26,7 +26,7 @@ import org.apache.flink.util.FlinkException;
 import org.apache.flink.util.Preconditions;
 
 /**
- * A deployment descriptor for an existing cluster.
+ * A deployment descriptor for an existing cluster. //现有集群的 集群描述器
  */
 public class StandaloneClusterDescriptor implements ClusterDescriptor<StandaloneClusterId> {
 

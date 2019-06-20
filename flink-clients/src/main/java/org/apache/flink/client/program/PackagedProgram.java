@@ -54,8 +54,8 @@ import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
 /**
- * This class encapsulates represents a program, packaged in a jar file. It supplies
- * functionality to extract nested libraries, search for the program entry point, and extract
+ * This class encapsulates represents a program, packaged in a jar file. It supplies //该封装类代表打包在jar文件中的程序
+ * functionality to extract nested libraries, search for the program entry point, and extract //它提供了提取嵌套库，搜索程序入口点和获取程序的执行计划的功能
  * a program plan.
  */
 public class PackagedProgram {
@@ -76,7 +76,7 @@ public class PackagedProgram {
 
 	private final String[] args;
 
-	private final Program program;
+	private final Program program; //主类入口类的 实例
 
 	private final Class<?> mainClass;
 
@@ -150,8 +150,8 @@ public class PackagedProgram {
 	}
 
 	/**
-	 * Creates an instance that wraps the plan defined in the jar file using the given
-	 * arguments. For generating the plan the class defined in the className parameter
+	 * Creates an instance that wraps the plan defined in the jar file using the given //通过给定的参数 创建一个包含 定义在jar文件中的执行计划
+	 * arguments. For generating the plan the class defined in the className parameter //为了生成计划，使用className参数中定义的类。？？
 	 * is used.
 	 *
 	 * @param jarFile
@@ -175,7 +175,7 @@ public class PackagedProgram {
 
 		URL jarFileUrl;
 		try {
-			jarFileUrl = jarFile.getAbsoluteFile().toURI().toURL();
+			jarFileUrl = jarFile.getAbsoluteFile().toURI().toURL(); //获得jar的URL
 		} catch (MalformedURLException e1) {
 			throw new IllegalArgumentException("The jar file path is invalid.");
 		}
@@ -185,24 +185,24 @@ public class PackagedProgram {
 		this.jarFile = jarFileUrl;
 		this.args = args == null ? new String[0] : args;
 
-		// if no entryPointClassName name was given, we try and look one up through the manifest
+		// if no entryPointClassName name was given, we try and look one up through the manifest //如果没有设置入口类，那么尝试通过manifest去寻找
 		if (entryPointClassName == null) {
 			entryPointClassName = getEntryPointClassNameFromJar(jarFileUrl);
 		}
 
-		// now that we have an entry point, we can extract the nested jar files (if any)
+		// now that we have an entry point, we can extract the nested jar files (if any) //既然我们有一个入口点，我们可以提取嵌套的jar文件（如果有的话）
 		this.extractedTempLibraries = extractContainedLibraries(jarFileUrl);
 		this.classpaths = classpaths;
 		this.userCodeClassLoader = JobWithJars.buildUserCodeClassLoader(getAllLibraries(), classpaths, getClass().getClassLoader());
 
-		// load the entry point class
+		// load the entry point class //拿到入口类
 		this.mainClass = loadMainClass(entryPointClassName, userCodeClassLoader);
 
-		// if the entry point is a program, instantiate the class and get the plan
+		// if the entry point is a program, instantiate the class and get the plan //如果入口点是程序，则实例化该类并获得计划
 		if (Program.class.isAssignableFrom(this.mainClass)) {
 			Program prg = null;
 			try {
-				prg = InstantiationUtil.instantiate(this.mainClass.asSubclass(Program.class), Program.class);
+				prg = InstantiationUtil.instantiate(this.mainClass.asSubclass(Program.class), Program.class); //通过主类入口类创建该类的实例
 			} catch (Exception e) {
 				// validate that the class has a main method at least.
 				// the main method possibly instantiates the program properly

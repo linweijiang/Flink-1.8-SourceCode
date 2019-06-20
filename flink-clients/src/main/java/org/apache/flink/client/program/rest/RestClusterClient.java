@@ -129,7 +129,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
- * A {@link ClusterClient} implementation that communicates via HTTP REST requests.
+ * A {@link ClusterClient} implementation that communicates via HTTP REST requests. //从这里可以知道，该client是除了local和yarn以外的job提交client
  */
 public class RestClusterClient<T> extends ClusterClient<T> implements NewClusterClient {
 
@@ -137,7 +137,7 @@ public class RestClusterClient<T> extends ClusterClient<T> implements NewCluster
 
 	private final RestClient restClient;
 
-	private final ExecutorService executorService = Executors.newFixedThreadPool(4, new ExecutorThreadFactory("Flink-RestClusterClient-IO"));
+	private final ExecutorService executorService = Executors.newFixedThreadPool(4, new ExecutorThreadFactory("Flink-RestClusterClient-IO")); //启动一个线程池专门来提交job的？
 
 	private final WaitStrategy waitStrategy;
 
@@ -240,7 +240,7 @@ public class RestClusterClient<T> extends ClusterClient<T> implements NewCluster
 	public JobSubmissionResult submitJob(JobGraph jobGraph, ClassLoader classLoader) throws ProgramInvocationException {
 		log.info("Submitting job {} (detached: {}).", jobGraph.getJobID(), isDetached());
 
-		final CompletableFuture<JobSubmissionResult> jobSubmissionFuture = submitJob(jobGraph);
+		final CompletableFuture<JobSubmissionResult> jobSubmissionFuture = submitJob(jobGraph); //enter
 
 		if (isDetached()) {
 			try {
@@ -314,20 +314,20 @@ public class RestClusterClient<T> extends ClusterClient<T> implements NewCluster
 	}
 
 	/**
-	 * Submits the given {@link JobGraph} to the dispatcher.
+	 * Submits the given {@link JobGraph} to the dispatcher. //提交给定的JobGraph到 dispatcher
 	 *
 	 * @param jobGraph to submit
 	 * @return Future which is completed with the submission response
 	 */
 	@Override
 	public CompletableFuture<JobSubmissionResult> submitJob(@Nonnull JobGraph jobGraph) {
-		// we have to enable queued scheduling because slot will be allocated lazily
+		// we have to enable queued scheduling because slot will be allocated lazily //这里是启动的队列调度，因为slot是懒汉式分配的
 		jobGraph.setAllowQueuedScheduling(true);
 
-		CompletableFuture<java.nio.file.Path> jobGraphFileFuture = CompletableFuture.supplyAsync(() -> {
+		CompletableFuture<java.nio.file.Path> jobGraphFileFuture = CompletableFuture.supplyAsync(() -> { //异步执行，将jobGraph写到nio中？
 			try {
-				final java.nio.file.Path jobGraphFile = Files.createTempFile("flink-jobgraph", ".bin");
-				try (ObjectOutputStream objectOut = new ObjectOutputStream(Files.newOutputStream(jobGraphFile))) {
+				final java.nio.file.Path jobGraphFile = Files.createTempFile("flink-jobgraph", ".bin"); //是通过堆外内存将执行graph提交的？
+				try (ObjectOutputStream objectOut = new ObjectOutputStream(Files.newOutputStream(jobGraphFile))) { //将jobGraph写出去
 					objectOut.writeObject(jobGraph);
 				}
 				return jobGraphFile;
@@ -336,10 +336,10 @@ public class RestClusterClient<T> extends ClusterClient<T> implements NewCluster
 			}
 		}, executorService);
 
-		CompletableFuture<Tuple2<JobSubmitRequestBody, Collection<FileUpload>>> requestFuture = jobGraphFileFuture.thenApply(jobGraphFile -> {
+		CompletableFuture<Tuple2<JobSubmitRequestBody, Collection<FileUpload>>> requestFuture = jobGraphFileFuture.thenApply(jobGraphFile -> { //将异步处理后的结果拆分封装成http request的信息，包括body等
 			List<String> jarFileNames = new ArrayList<>(8);
 			List<JobSubmitRequestBody.DistributedCacheFile> artifactFileNames = new ArrayList<>(8);
-			Collection<FileUpload> filesToUpload = new ArrayList<>(8);
+			Collection<FileUpload> filesToUpload = new ArrayList<>(8); //用来保存jobGraphFile和jar file
 
 			filesToUpload.add(new FileUpload(jobGraphFile, RestConstants.CONTENT_TYPE_BINARY));
 
@@ -383,7 +383,7 @@ public class RestClusterClient<T> extends ClusterClient<T> implements NewCluster
 		return submissionFuture
 			.thenApply(
 				(JobSubmitResponseBody jobSubmitResponseBody) -> new JobSubmissionResult(jobGraph.getJobID()))
-			.exceptionally(
+			.exceptionally(//异常处理很有个性，TO-DO：待学习(这是Completable自带的异常处理方法)
 				(Throwable throwable) -> {
 					throw new CompletionException(new JobSubmissionException(jobGraph.getJobID(), "Failed to submit JobGraph.", ExceptionUtils.stripCompletionException(throwable)));
 				});
@@ -716,9 +716,9 @@ public class RestClusterClient<T> extends ClusterClient<T> implements NewCluster
 
 	private <M extends MessageHeaders<R, P, U>, U extends MessageParameters, R extends RequestBody, P extends ResponseBody> CompletableFuture<P>
 	sendRetriableRequest(M messageHeaders, U messageParameters, R request, Collection<FileUpload> filesToUpload, Predicate<Throwable> retryPredicate) {
-		return retry(() -> getWebMonitorBaseUrl().thenCompose(webMonitorBaseUrl -> {
+		return retry(() -> getWebMonitorBaseUrl().thenCompose(webMonitorBaseUrl -> { //如果发送失败则重试？
 			try {
-				return restClient.sendRequest(webMonitorBaseUrl.getHost(), webMonitorBaseUrl.getPort(), messageHeaders, messageParameters, request, filesToUpload);
+				return restClient.sendRequest(webMonitorBaseUrl.getHost(), webMonitorBaseUrl.getPort(), messageHeaders, messageParameters, request, filesToUpload); //end，通过这里发送给jobManager
 			} catch (IOException e) {
 				throw new CompletionException(e);
 			}
