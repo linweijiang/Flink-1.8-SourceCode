@@ -190,7 +190,7 @@ public class ExecutionGraph implements AccessExecutionGraph {
 	/** The executor which is used to execute blocking io operations. */
 	private final Executor ioExecutor;
 
-	/** Executor that runs tasks in the job manager's main thread. */
+	/** Executor that runs tasks in the job manager's main thread. */ //在job manager的主线程上执行tasks的 executor
 	@Nonnull
 	private ComponentMainThreadExecutor jobMasterMainThreadExecutor;
 
@@ -209,7 +209,7 @@ public class ExecutionGraph implements AccessExecutionGraph {
 	/** The currently executed tasks, for callbacks. */
 	private final ConcurrentHashMap<ExecutionAttemptID, Execution> currentExecutions;
 
-	/** Listeners that receive messages when the entire job switches it status
+	/** Listeners that receive messages when the entire job switches it status //当整个job转换status时用于接收消息的Listeners
 	 * (such as from RUNNING to FINISHED). */
 	private final List<JobStatusListener> jobStatusListeners;
 
@@ -246,7 +246,7 @@ public class ExecutionGraph implements AccessExecutionGraph {
 	/** Blob writer used to offload RPC messages. */
 	private final BlobWriter blobWriter;
 
-	/** The total number of vertices currently in the execution graph. */
+	/** The total number of vertices currently in the execution graph. */ //在execution中有多少个顶部点，也就是source
 	private int numVerticesTotal;
 
 	// ------ Configuration of the Execution -------
@@ -883,7 +883,7 @@ public class ExecutionGraph implements AccessExecutionGraph {
 		failoverStrategy.notifyNewVertices(newExecJobVertices);
 	}
 
-	public void scheduleForExecution() throws JobException {
+	public void scheduleForExecution() throws JobException { //开始调度
 
 		assertRunningInJobMasterMainThread();
 
@@ -925,16 +925,16 @@ public class ExecutionGraph implements AccessExecutionGraph {
 		}
 	}
 
-	private CompletableFuture<Void> scheduleLazy(SlotProvider slotProvider) {
+	private CompletableFuture<Void> scheduleLazy(SlotProvider slotProvider) { //懒汉式调度
 
 		final ArrayList<CompletableFuture<Void>> schedulingFutures = new ArrayList<>(numVerticesTotal);
-		// simply take the vertices without inputs.
+		// simply take the vertices without inputs. //获取没有input的vertices
 		for (ExecutionJobVertex ejv : verticesInCreationOrder) {
 			if (ejv.getJobVertex().isInputVertex()) {
 				final CompletableFuture<Void> schedulingJobVertexFuture = ejv.scheduleAll(
 					slotProvider,
 					allowQueuedScheduling,
-					LocationPreferenceConstraint.ALL, // since it is an input vertex, the input based location preferences should be empty
+					LocationPreferenceConstraint.ALL, // since it is an input vertex, the input based location preferences should be empty //因为是输入的顶点，所以input location的引用应该为空
 					Collections.emptySet());
 
 				schedulingFutures.add(schedulingJobVertexFuture);

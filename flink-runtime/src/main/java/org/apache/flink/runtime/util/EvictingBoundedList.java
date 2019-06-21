@@ -28,9 +28,9 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 /**
- * This class implements a list (array based) that is physically bounded in maximum size, but can virtually grow beyond
- * the bounded size. When the list grows beyond the size bound, elements are dropped from the head of the list (FIFO
- * order). If dropped elements are accessed, a default element is returned instead.
+ * This class implements a list (array based) that is physically bounded in maximum size, but can virtually grow beyond //该类实现了一个list(基于数组)，该list在物理上以最大大小为界，但实际上可以超出有界大小。
+ * the bounded size. When the list grows beyond the size bound, elements are dropped from the head of the list (FIFO //当list超出大小限制时，将从list(linkedList)的头部（FIFO顺序）中删除元素。
+ * order). If dropped elements are accessed, a default element is returned instead. //如果访问了删除的元素，则返回默认元素。
  * 
  * <p>The list by itself is serializable, but a full list can only be serialized if the values
  * are also serializable.

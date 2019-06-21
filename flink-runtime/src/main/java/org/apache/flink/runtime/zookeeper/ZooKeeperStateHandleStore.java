@@ -110,15 +110,15 @@ public class ZooKeeperStateHandleStore<T extends Serializable> {
 	}
 
 	/**
-	 * Creates a state handle, stores it in ZooKeeper and locks it. A locked node cannot be removed by
-	 * another {@link ZooKeeperStateHandleStore} instance as long as this instance remains connected
+	 * Creates a state handle, stores it in ZooKeeper and locks it. A locked node cannot be removed by //创建一个状态句柄，将其存储在ZooKeeper中并锁定它。
+	 * another {@link ZooKeeperStateHandleStore} instance as long as this instance remains connected //只要此实例保持与ZooKeeper的连接，就无法通过其他 {@link ZooKeeperStateHandleStore} 实例删除锁定的节点。
 	 * to ZooKeeper.
 	 *
-	 * <p><strong>Important</strong>: This will <em>not</em> store the actual state in
+	 * <p><strong>Important</strong>: This will <em>not</em> store the actual state in //这里不会真实存储state到Zookeeper中，而是创建一个句柄引用并将此引用存储到Zookeeper中（真实的state存储在hdfs等持久化的存储上，），这种间接级别可确保ZooKeeper中的数据很小。
 	 * ZooKeeper, but create a state handle and store it in ZooKeeper. This level of indirection
 	 * makes sure that data in ZooKeeper is small.
 	 *
-	 * <p>The operation will fail if there is already an node under the given path
+	 * <p>The operation will fail if there is already an node under the given path //如果给定的path下有该节点了，则operation将会失败
 	 *
 	 * @param pathInZooKeeper Destination path in ZooKeeper (expected to *not* exist yet)
 	 * @param state           State to be added
@@ -134,21 +134,21 @@ public class ZooKeeperStateHandleStore<T extends Serializable> {
 
 		final String path = normalizePath(pathInZooKeeper);
 
-		RetrievableStateHandle<T> storeHandle = storage.store(state);
+		RetrievableStateHandle<T> storeHandle = storage.store(state); //将state持久化，并返回引用的句柄（如果是job提交，则是jobGraph）
 
 		boolean success = false;
 
 		try {
-			// Serialize the state handle. This writes the state to the backend.
+			// Serialize the state handle. This writes the state to the backend. //序列化状态句柄。 这会将状态写入后端(zk)。
 			byte[] serializedStoreHandle = InstantiationUtil.serializeObject(storeHandle);
 
-			// Write state handle (not the actual state) to ZooKeeper. This is expected to be
-			// smaller than the state itself. This level of indirection makes sure that data in
+			// Write state handle (not the actual state) to ZooKeeper. This is expected to be //写state的句柄（不是真实的state）到Zookeeper中。因为希望state能尽可能小
+			// smaller than the state itself. This level of indirection makes sure that data in //通过句柄的方式间接的使得存储到zk中的数据足够小，因为zk的设计是用来存储KB级别的数据，但是state可以很大
 			// ZooKeeper is small, because ZooKeeper is designed for data in the KB range, but
 			// the state can be larger.
-			// Create the lock node in a transaction with the actual state node. That way we can prevent
+			// Create the lock node in a transaction with the actual state node. That way we can prevent //在一个事物中在zk创建一个用来存储句柄的lock节点。该方法能够阻止在并发中自增的条件的删除操作
 			// race conditions with a concurrent delete operation.
-			client.inTransaction().create().withMode(CreateMode.PERSISTENT).forPath(path, serializedStoreHandle)
+			client.inTransaction().create().withMode(CreateMode.PERSISTENT).forPath(path, serializedStoreHandle) //将句柄存储到zk中
 				.and().create().withMode(CreateMode.EPHEMERAL).forPath(getLockPath(path))
 				.and().commit();
 

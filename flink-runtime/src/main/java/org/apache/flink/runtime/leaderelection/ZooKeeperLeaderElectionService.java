@@ -46,8 +46,8 @@ import java.io.ObjectOutputStream;
 import java.util.UUID;
 
 /**
- * Leader election service for multiple JobManager. The leading JobManager is elected using
- * ZooKeeper. The current leader's address as well as its leader session ID is published via
+ * Leader election service for multiple JobManager. The leading JobManager is elected using //leader的选举对于多个JobManager。JobManager leader的选举是使用的zk
+ * ZooKeeper. The current leader's address as well as its leader session ID is published via //当前leader的地址以及该leader的session id也是通过ZooKeeper发布的（在zk中有记录）
  * ZooKeeper as well.
  */
 public class ZooKeeperLeaderElectionService implements LeaderElectionService, LeaderLatchListener, NodeCacheListener, UnhandledErrorListener {
@@ -106,7 +106,7 @@ public class ZooKeeperLeaderElectionService implements LeaderElectionService, Le
 	}
 
 	/**
-	 * Returns the current leader session ID or null, if the contender is not the leader.
+	 * Returns the current leader session ID or null, if the contender is not the leader. //暂时先跳到跳到 {@link org.apache.flink.runtime.leaderelection.ZooKeeperLeaderElectionService#isLeader}
 	 *
 	 * @return The last leader session ID or null, if the contender is not the leader
 	 */
@@ -135,7 +135,7 @@ public class ZooKeeperLeaderElectionService implements LeaderElectionService, Le
 
 			client.getConnectionStateListenable().addListener(listener);
 
-			running = true;
+			running = true; //TO-DO 追踪到这里就断片了，从这里启动的job，但是就是找不到入口，感觉是通过zk记录后，jobManager监听到这个事件后启动的job，所以就需要知道从哪里监听，但是为了赶时间，先跳过这个块
 		}
 	}
 
@@ -212,7 +212,7 @@ public class ZooKeeperLeaderElectionService implements LeaderElectionService, Le
 	}
 
 	@Override
-	public void isLeader() {
+	public void isLeader() { //只能追踪到这里，哪里调用的这里？暂时从这里开始
 		synchronized (lock) {
 			if (running) {
 				issuedLeaderSessionID = UUID.randomUUID();
@@ -225,7 +225,7 @@ public class ZooKeeperLeaderElectionService implements LeaderElectionService, Le
 						issuedLeaderSessionID);
 				}
 
-				leaderContender.grantLeadership(issuedLeaderSessionID);
+				leaderContender.grantLeadership(issuedLeaderSessionID); //enter，发放leader
 			} else {
 				LOG.debug("Ignoring the grant leadership notification since the service has " +
 					"already been stopped.");

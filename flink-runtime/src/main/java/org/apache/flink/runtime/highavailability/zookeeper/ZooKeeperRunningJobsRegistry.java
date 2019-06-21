@@ -74,7 +74,7 @@ public class ZooKeeperRunningJobsRegistry implements RunningJobsRegistry {
 	}
 
 	@Override
-	public JobSchedulingStatus getJobSchedulingStatus(JobID jobID) throws IOException {
+	public JobSchedulingStatus getJobSchedulingStatus(JobID jobID) throws IOException { //获取在zk中的job的stat
 		checkNotNull(jobID);
 
 		try {

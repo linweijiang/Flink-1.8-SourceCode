@@ -467,12 +467,12 @@ public class ExecutionJobVertex implements AccessExecutionJobVertex, Archiveable
 	//---------------------------------------------------------------------------------------------
 
 	/**
-	 * Schedules all execution vertices of this ExecutionJobVertex.
+	 * Schedules all execution vertices of this ExecutionJobVertex. //调度此ExecutionJobVertex所有的execution vertices
 	 *
-	 * @param slotProvider to allocate the slots from
-	 * @param queued if the allocations can be queued
-	 * @param locationPreferenceConstraint constraint for the location preferences
-	 * @param allPreviousExecutionGraphAllocationIds set with all previous allocation ids in the job graph.
+	 * @param slotProvider to allocate the slots from //从这里分配slot
+	 * @param queued if the allocations can be queued //slot的分配是否能够排队（在queue中）
+	 * @param locationPreferenceConstraint constraint(约束) for the location preferences
+	 * @param allPreviousExecutionGraphAllocationIds set with all previous(之前的) allocation ids in the job graph.
 	 *                                                 Can be empty if the allocation ids are not required for scheduling.
 	 * @return Future which is completed once all {@link Execution} could be deployed
 	 */
@@ -486,9 +486,9 @@ public class ExecutionJobVertex implements AccessExecutionJobVertex, Archiveable
 
 		final ArrayList<CompletableFuture<Void>> scheduleFutures = new ArrayList<>(vertices.length);
 
-		// kick off the tasks
+		// kick off the tasks //开始task
 		for (ExecutionVertex ev : vertices) {
-			scheduleFutures.add(ev.scheduleForExecution(
+			scheduleFutures.add(ev.scheduleForExecution( //enter
 				slotProvider,
 				queued,
 				locationPreferenceConstraint,

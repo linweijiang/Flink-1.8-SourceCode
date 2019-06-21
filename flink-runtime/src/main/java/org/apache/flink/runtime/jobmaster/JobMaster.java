@@ -310,16 +310,16 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId> implements JobMast
 	//----------------------------------------------------------------------------------------------
 
 	/**
-	 * Start the rpc service and begin to run the job.
+	 * Start the rpc service and begin to run the job. //启动一个rpc service并开始启动job
 	 *
 	 * @param newJobMasterId The necessary fencing token to run the job
 	 * @return Future acknowledge if the job could be started. Otherwise the future contains an exception
 	 */
 	public CompletableFuture<Acknowledge> start(final JobMasterId newJobMasterId) throws Exception {
-		// make sure we receive RPC and async calls
+		// make sure we receive RPC and async calls //确保我们能接受rpc和异步的调用
 		start();
 
-		return callAsyncWithoutFencing(() -> startJobExecution(newJobMasterId), RpcUtils.INF_TIMEOUT);
+		return callAsyncWithoutFencing(() -> startJobExecution(newJobMasterId), RpcUtils.INF_TIMEOUT); //启动job
 	}
 
 	/**
@@ -1031,7 +1031,7 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId> implements JobMast
 
 	//-- job starting and stopping  -----------------------------------------------------------------
 
-	private Acknowledge startJobExecution(JobMasterId newJobMasterId) throws Exception {
+	private Acknowledge startJobExecution(JobMasterId newJobMasterId) throws Exception { //启动job
 
 		validateRunsInMainThread();
 
@@ -1045,7 +1045,7 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId> implements JobMast
 
 		setNewFencingToken(newJobMasterId);
 
-		startJobMasterServices();
+		startJobMasterServices(); //主要是确保resource manager的slot pool能请求到slot
 
 		log.info("Starting execution of job {} ({}) under job master id {}.", jobGraph.getName(), jobGraph.getJobID(), newJobMasterId);
 
@@ -1055,7 +1055,7 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId> implements JobMast
 	}
 
 	private void startJobMasterServices() throws Exception {
-		// start the slot pool make sure the slot pool now accepts messages for this leader
+		// start the slot pool make sure the slot pool now accepts messages for this leader //启动slot pool确保slot pool现在能接受来自这个leader的请求
 		slotPool.start(getFencingToken(), getAddress(), getMainThreadExecutor());
 		scheduler.start(getMainThreadExecutor());
 
@@ -1063,9 +1063,9 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId> implements JobMast
 		// try to reconnect to previously known leader
 		reconnectToResourceManager(new FlinkException("Starting JobMaster component."));
 
-		// job is ready to go, try to establish connection with resource manager
-		//   - activate leader retrieval for the resource manager
-		//   - on notification of the leader, the connection will be established and
+		// job is ready to go, try to establish connection with resource manager //job已经准备去跑了，尝试去和resource manager（taskManager）取得连接
+		//   - activate leader retrieval for the resource manager //从resource manager中使leader变得积极？？
+		//   - on notification of the leader, the connection will be established and //在通知leaer时，将会建立连接和是slot pool将会开始slot的请求
 		//     the slot pool will start requesting slots
 		resourceManagerLeaderRetriever.start(new ResourceManagerLeaderListener());
 	}
@@ -1132,14 +1132,14 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId> implements JobMast
 		jobManagerJobMetricGroup = newJobManagerJobMetricGroup;
 	}
 
-	private void resetAndScheduleExecutionGraph() throws Exception {
+	private void resetAndScheduleExecutionGraph() throws Exception { //重置并且开始调度ExecutionGraph
 		validateRunsInMainThread();
 
 		final CompletableFuture<Void> executionGraphAssignedFuture;
 
 		if (executionGraph.getState() == JobStatus.CREATED) {
 			executionGraphAssignedFuture = CompletableFuture.completedFuture(null);
-			executionGraph.start(getMainThreadExecutor());
+			executionGraph.start(getMainThreadExecutor()); //enter
 		} else {
 			suspendAndClearExecutionGraphFields(new FlinkException("ExecutionGraph is being reset in order to be rescheduled."));
 			final JobManagerJobMetricGroup newJobManagerJobMetricGroup = jobMetricGroupFactory.create(jobGraph);
@@ -1153,7 +1153,7 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId> implements JobMast
 				});
 		}
 
-		executionGraphAssignedFuture.thenRun(this::scheduleExecutionGraph);
+		executionGraphAssignedFuture.thenRun(this::scheduleExecutionGraph); //调度executionGraph
 	}
 
 	private void scheduleExecutionGraph() {
@@ -1163,7 +1163,7 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId> implements JobMast
 		executionGraph.registerJobStatusListener(jobStatusListener);
 
 		try {
-			executionGraph.scheduleForExecution();
+			executionGraph.scheduleForExecution(); //enter
 		}
 		catch (Throwable t) {
 			executionGraph.failGlobal(t);

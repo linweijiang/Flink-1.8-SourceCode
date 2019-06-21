@@ -53,7 +53,7 @@ import static org.apache.flink.util.Preconditions.checkArgument;
 import static org.apache.flink.util.Preconditions.checkNotNull;
 
 /**
- * The runner for the job manager. It deals with job level leader election and make underlying job manager
+ * The runner for the job manager. It deals with job level leader election and make underlying job manager //它处理leader选举并使“底层的”jobmanager做出适当的反应（个人理解是jobAPPMaster类的？通过构造器可以知道是包含JobMaster的）
  * properly reacted.
  */
 public class JobManagerRunner implements LeaderContender, OnCompletionActions, AutoCloseableAsync {
@@ -71,7 +71,7 @@ public class JobManagerRunner implements LeaderContender, OnCompletionActions, A
 	/** Used to check whether a job needs to be run. */
 	private final RunningJobsRegistry runningJobsRegistry;
 
-	/** Leader election for this job. */
+	/** Leader election for this job. */ //一个job的leader选举service
 	private final LeaderElectionService leaderElectionService;
 
 	private final LibraryCacheManager libraryCacheManager;
@@ -288,7 +288,7 @@ public class JobManagerRunner implements LeaderContender, OnCompletionActions, A
 			leadershipOperation = leadershipOperation.thenCompose(
 				(ignored) -> {
 					synchronized (lock) {
-						return verifyJobSchedulingStatusAndStartJobManager(leaderSessionID);
+						return verifyJobSchedulingStatusAndStartJobManager(leaderSessionID); //enter,验证job的调度state和启动jobManager
 					}
 				});
 
@@ -297,14 +297,14 @@ public class JobManagerRunner implements LeaderContender, OnCompletionActions, A
 	}
 
 	private CompletableFuture<Void> verifyJobSchedulingStatusAndStartJobManager(UUID leaderSessionId) {
-		final CompletableFuture<JobSchedulingStatus> jobSchedulingStatusFuture = getJobSchedulingStatus();
+		final CompletableFuture<JobSchedulingStatus> jobSchedulingStatusFuture = getJobSchedulingStatus();////通过jobId获取在zk中的job的stat
 
 		return jobSchedulingStatusFuture.thenCompose(
 			jobSchedulingStatus -> {
-				if (jobSchedulingStatus == JobSchedulingStatus.DONE) {
+				if (jobSchedulingStatus == JobSchedulingStatus.DONE) { //如果该job已经done了，则直接返回
 					return jobAlreadyDone();
 				} else {
-					return startJobMaster(leaderSessionId);
+					return startJobMaster(leaderSessionId); //否则就是还没启动job，启动jobMaster，enter
 				}
 			});
 	}
@@ -324,7 +324,7 @@ public class JobManagerRunner implements LeaderContender, OnCompletionActions, A
 
 		final CompletableFuture<Acknowledge> startFuture;
 		try {
-			startFuture = jobMasterService.start(new JobMasterId(leaderSessionId));
+			startFuture = jobMasterService.start(new JobMasterId(leaderSessionId)); //为一个job启动一个JobMaster
 		} catch (Exception e) {
 			return FutureUtils.completedExceptionally(new FlinkException("Failed to start the JobMaster.", e));
 		}
@@ -344,7 +344,7 @@ public class JobManagerRunner implements LeaderContender, OnCompletionActions, A
 
 	private CompletableFuture<JobSchedulingStatus> getJobSchedulingStatus() {
 		try {
-			JobSchedulingStatus jobSchedulingStatus = runningJobsRegistry.getJobSchedulingStatus(jobGraph.getJobID());
+			JobSchedulingStatus jobSchedulingStatus = runningJobsRegistry.getJobSchedulingStatus(jobGraph.getJobID()); //通过jobId获取在zk中的job的stat
 			return CompletableFuture.completedFuture(jobSchedulingStatus);
 		} catch (IOException e) {
 			return FutureUtils.completedExceptionally(

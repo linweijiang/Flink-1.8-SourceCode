@@ -317,7 +317,7 @@ public class Execution implements AccessExecution, Archiveable<ArchivedExecution
 	}
 
 	@Override
-	public TaskManagerLocation getAssignedResourceLocation() {
+	public TaskManagerLocation getAssignedResourceLocation() { //拿到taskManager的访问连接
 		// returns non-null only when a location is already assigned
 		final LogicalSlot currentAssignedResource = assignedResource;
 		return currentAssignedResource != null ? currentAssignedResource.getTaskManagerLocation() : null;
@@ -403,7 +403,7 @@ public class Execution implements AccessExecution, Archiveable<ArchivedExecution
 	/**
 	 * NOTE: This method only throws exceptions if it is in an illegal state to be scheduled, or if the tasks needs
 	 *       to be scheduled immediately and no resource is available. If the task is accepted by the schedule, any
-	 *       error sets the vertex state to failed and triggers the recovery logic.
+	 *       error sets the vertex state to failed and triggers the recovery logic. //如果task被调度器接受了，那么任何设置的到vertex 的错误的state都会触发恢复的逻辑
 	 *
 	 * @param slotProvider The slot provider to use to allocate slot for this execution attempt.
 	 * @param queued Flag to indicate whether the scheduler may queue this task if it cannot
@@ -423,7 +423,7 @@ public class Execution implements AccessExecution, Archiveable<ArchivedExecution
 		final ExecutionGraph executionGraph = vertex.getExecutionGraph();
 		final Time allocationTimeout = executionGraph.getAllocationTimeout();
 		try {
-			final CompletableFuture<Execution> allocationFuture = allocateAndAssignSlotForExecution(
+			final CompletableFuture<Execution> allocationFuture = allocateAndAssignSlotForExecution( //申请slot，并注册slot的回调方法用于canceled等
 				slotProvider,
 				queued,
 				locationPreferenceConstraint,
@@ -433,7 +433,7 @@ public class Execution implements AccessExecution, Archiveable<ArchivedExecution
 			final CompletableFuture<Void> deploymentFuture;
 
 			if (allocationFuture.isDone() || queued) {
-				deploymentFuture = allocationFuture.thenRun(ThrowingRunnable.unchecked(this::deploy));
+				deploymentFuture = allocationFuture.thenRun(ThrowingRunnable.unchecked(this::deploy)); //如果申请完成，则将job task部署到slot中
 			} else {
 				deploymentFuture = FutureUtils.completedExceptionally(
 					new IllegalArgumentException("The slot allocation future has not been completed yet."));
@@ -463,7 +463,7 @@ public class Execution implements AccessExecution, Archiveable<ArchivedExecution
 	}
 
 	/**
-	 * Allocates and assigns a slot obtained from the slot provider to the execution.
+	 * Allocates and assigns a slot obtained from the slot provider to the execution. //从slot provider分配并获得slot给execution
 	 *
 	 * @param slotProvider to obtain a new slot from
 	 * @param queued if the allocation can be queued
@@ -495,20 +495,20 @@ public class Execution implements AccessExecution, Archiveable<ArchivedExecution
 					"Trying to schedule with co-location constraint but without slot sharing allowed.");
 		}
 
-		// this method only works if the execution is in the state 'CREATED'
+		// this method only works if the execution is in the state 'CREATED' //只有CREATE的能够执行
 		if (transitionState(CREATED, SCHEDULED)) {
 
 			final SlotSharingGroupId slotSharingGroupId = sharingGroup != null ? sharingGroup.getSlotSharingGroupId() : null;
 
-			ScheduledUnit toSchedule = locationConstraint == null ?
+			ScheduledUnit toSchedule = locationConstraint == null ? //获取调度单元
 					new ScheduledUnit(this, slotSharingGroupId) :
 					new ScheduledUnit(this, slotSharingGroupId, locationConstraint);
 
-			// try to extract previous allocation ids, if applicable, so that we can reschedule to the same slot
+			// try to extract(提取) previous allocation ids, if applicable(可应用), so that we can reschedule to the same slot
 			ExecutionVertex executionVertex = getVertex();
-			AllocationID lastAllocation = executionVertex.getLatestPriorAllocation();
+			AllocationID lastAllocation = executionVertex.getLatestPriorAllocation(); //获得最近最新的分配
 
-			Collection<AllocationID> previousAllocationIDs =
+			Collection<AllocationID> previousAllocationIDs = //之前分配的id？
 				lastAllocation != null ? Collections.singletonList(lastAllocation) : Collections.emptyList();
 
 			// calculate the preferred locations
@@ -520,7 +520,7 @@ public class Execution implements AccessExecution, Archiveable<ArchivedExecution
 			final CompletableFuture<LogicalSlot> logicalSlotFuture =
 				preferredLocationsFuture.thenCompose(
 					(Collection<TaskManagerLocation> preferredLocations) ->
-						slotProvider.allocateSlot(
+						slotProvider.allocateSlot( //分配slot
 							slotRequestId,
 							toSchedule,
 							new SlotProfile(
@@ -531,7 +531,7 @@ public class Execution implements AccessExecution, Archiveable<ArchivedExecution
 							queued,
 							allocationTimeout));
 
-			// register call back to cancel slot request in case that the execution gets canceled
+			// register call back to cancel slot request in case that the execution gets canceled //注册回调方法为了取消slot的请求，比如execution得到了canceled的请求
 			releaseFuture.whenComplete(
 				(Object ignored, Throwable throwable) -> {
 					if (logicalSlotFuture.cancel(false)) {
@@ -542,7 +542,7 @@ public class Execution implements AccessExecution, Archiveable<ArchivedExecution
 					}
 				});
 
-			// This forces calls to the slot pool back into the main thread, for normal and exceptional completion
+			// This forces calls to the slot pool back into the main thread, for normal and exceptional completion //这会强制slot pool的调用返还给main thread？
 			return logicalSlotFuture.handle(
 				(LogicalSlot logicalSlot, Throwable failure) -> {
 
@@ -567,7 +567,7 @@ public class Execution implements AccessExecution, Archiveable<ArchivedExecution
 	}
 
 	/**
-	 * Deploys the execution to the previously assigned resource.
+	 * Deploys the execution to the previously assigned resource. //部署execution到之前分配的资源中（slot）
 	 *
 	 * @throws JobException if the execution cannot be deployed to the assigned resource
 	 */
@@ -585,10 +585,10 @@ public class Execution implements AccessExecution, Archiveable<ArchivedExecution
 			throw new JobException("Target slot (TaskManager) for deployment is no longer alive.");
 		}
 
-		// make sure exactly one deployment call happens from the correct state
-		// note: the transition from CREATED to DEPLOYING is for testing purposes only
+		// make sure exactly one deployment call happens from the correct state //确保从正确的state中进行精准一次的部署
+		// note: the transition from CREATED to DEPLOYING is for testing purposes only //从CREATED to DEPLOYING的过渡只是为了测试？
 		ExecutionState previous = this.state;
-		if (previous == SCHEDULED || previous == CREATED) {
+		if (previous == SCHEDULED || previous == CREATED) { //状态的转换
 			if (!transitionState(previous, DEPLOYING)) {
 				// race condition, someone else beat us to the deploying call.
 				// this should actually not happen and indicates a race somewhere else
@@ -627,15 +627,15 @@ public class Execution implements AccessExecution, Archiveable<ArchivedExecution
 			// null taskRestore to let it be GC'ed
 			taskRestore = null;
 
-			final TaskManagerGateway taskManagerGateway = slot.getTaskManagerGateway();
+			final TaskManagerGateway taskManagerGateway = slot.getTaskManagerGateway(); //通过slot获取taskManager的gateWay，这个方式不错
 
 			final ComponentMainThreadExecutor jobMasterMainThreadExecutor =
 				vertex.getExecutionGraph().getJobMasterMainThreadExecutor();
 
 
-			// We run the submission in the future executor so that the serialization of large TDDs does not block
-			// the main thread and sync back to the main thread once submission is completed.
-			CompletableFuture.supplyAsync(() -> taskManagerGateway.submitTask(deployment, rpcTimeout), executor)
+			// We run the submission in the future executor so that the serialization of large TDDs does not block //我们在将来的执行程序中运行提交？，以便大型TDD的序列化不会阻塞
+			// the main thread and sync back to the main thread once submission is completed. //一旦提交完成，主线程和异步线程就会同步回主线程。
+			CompletableFuture.supplyAsync(() -> taskManagerGateway.submitTask(deployment, rpcTimeout), executor) //提交subTask到taskManager中，从这里之后任务就提交到taskManager中了
 				.thenCompose(Function.identity())
 				.whenCompleteAsync(
 					(ack, failure) -> {
@@ -1362,7 +1362,7 @@ public class Execution implements AccessExecution, Archiveable<ArchivedExecution
 	// --------------------------------------------------------------------------------------------
 
 	/**
-	 * Calculates the preferred locations based on the location preference constraint.
+	 * Calculates the preferred locations based on the location preference constraint. //根据位置首选项约束计算首选位置?
 	 *
 	 * @param locationPreferenceConstraint constraint for the location preference
 	 * @return Future containing the collection of preferred locations. This might not be completed if not all inputs

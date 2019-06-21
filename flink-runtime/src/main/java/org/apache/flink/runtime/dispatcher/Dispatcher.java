@@ -259,7 +259,7 @@ public abstract class Dispatcher extends FencedRpcEndpoint<DispatcherId> impleme
 	//------------------------------------------------------
 
 	@Override
-	public CompletableFuture<Acknowledge> submitJob(JobGraph jobGraph, Time timeout) {
+	public CompletableFuture<Acknowledge> submitJob(JobGraph jobGraph, Time timeout) { //jobManager接收job，从这里开始
 		log.info("Received JobGraph submission {} ({}).", jobGraph.getJobID(), jobGraph.getName());
 
 		try {
@@ -267,7 +267,7 @@ public abstract class Dispatcher extends FencedRpcEndpoint<DispatcherId> impleme
 				return FutureUtils.completedExceptionally(
 					new JobSubmissionException(jobGraph.getJobID(), "Job has already been submitted."));
 			} else {
-				return internalSubmitJob(jobGraph);
+				return internalSubmitJob(jobGraph); //enter
 			}
 		} catch (FlinkException e) {
 			return FutureUtils.completedExceptionally(e);
@@ -296,7 +296,7 @@ public abstract class Dispatcher extends FencedRpcEndpoint<DispatcherId> impleme
 	private CompletableFuture<Acknowledge> internalSubmitJob(JobGraph jobGraph) {
 		log.info("Submitting job {} ({}).", jobGraph.getJobID(), jobGraph.getName());
 
-		final CompletableFuture<Acknowledge> persistAndRunFuture = waitForTerminatingJobManager(jobGraph.getJobID(), jobGraph, this::persistAndRunJob)
+		final CompletableFuture<Acknowledge> persistAndRunFuture = waitForTerminatingJobManager(jobGraph.getJobID(), jobGraph, this::persistAndRunJob) //enter this::persistAndRunJob
 			.thenApply(ignored -> Acknowledge.get());
 
 		return persistAndRunFuture.handleAsync((acknowledge, throwable) -> {
@@ -313,10 +313,10 @@ public abstract class Dispatcher extends FencedRpcEndpoint<DispatcherId> impleme
 		}, getRpcService().getExecutor());
 	}
 
-	private CompletableFuture<Void> persistAndRunJob(JobGraph jobGraph) throws Exception {
-		submittedJobGraphStore.putJobGraph(new SubmittedJobGraph(jobGraph));
+	private CompletableFuture<Void> persistAndRunJob(JobGraph jobGraph) throws Exception { //这里
+		submittedJobGraphStore.putJobGraph(new SubmittedJobGraph(jobGraph)); //持久化jobGraph，并记录jobId
 
-		final CompletableFuture<Void> runJobFuture = runJob(jobGraph);
+		final CompletableFuture<Void> runJobFuture = runJob(jobGraph);//enter，执行job
 
 		return runJobFuture.whenComplete(BiConsumerWithException.unchecked((Object ignored, Throwable throwable) -> {
 			if (throwable != null) {
@@ -325,7 +325,7 @@ public abstract class Dispatcher extends FencedRpcEndpoint<DispatcherId> impleme
 		}));
 	}
 
-	private CompletableFuture<Void> runJob(JobGraph jobGraph) {
+	private CompletableFuture<Void> runJob(JobGraph jobGraph) { //执行job
 		Preconditions.checkState(!jobManagerRunnerFutures.containsKey(jobGraph.getJobID()));
 
 		final CompletableFuture<JobManagerRunner> jobManagerRunnerFuture = createJobManagerRunner(jobGraph);
@@ -348,7 +348,7 @@ public abstract class Dispatcher extends FencedRpcEndpoint<DispatcherId> impleme
 
 		final CompletableFuture<JobManagerRunner> jobManagerRunnerFuture = CompletableFuture.supplyAsync(
 			CheckedSupplier.unchecked(() ->
-				jobManagerRunnerFactory.createJobManagerRunner(
+				jobManagerRunnerFactory.createJobManagerRunner( //为每个job创建一个JobManagerRunner（是包含JobMaster的）
 					jobGraph,
 					configuration,
 					rpcService,
@@ -359,7 +359,7 @@ public abstract class Dispatcher extends FencedRpcEndpoint<DispatcherId> impleme
 					fatalErrorHandler)),
 			rpcService.getExecutor());
 
-		return jobManagerRunnerFuture.thenApply(FunctionUtils.uncheckedFunction(this::startJobManagerRunner));
+		return jobManagerRunnerFuture.thenApply(FunctionUtils.uncheckedFunction(this::startJobManagerRunner)); //启动jobManagerRunner，方法在下面
 	}
 
 	private JobManagerRunner startJobManagerRunner(JobManagerRunner jobManagerRunner) throws Exception {
@@ -368,7 +368,7 @@ public abstract class Dispatcher extends FencedRpcEndpoint<DispatcherId> impleme
 			(ArchivedExecutionGraph archivedExecutionGraph, Throwable throwable) -> {
 				// check if we are still the active JobManagerRunner by checking the identity
 				//noinspection ObjectEquality
-				if (jobManagerRunner == jobManagerRunnerFutures.get(jobId).getNow(null)) {
+				if (jobManagerRunner == jobManagerRunnerFutures.get(jobId).getNow(null)) {//在jobManager的主线程执行
 					if (archivedExecutionGraph != null) {
 						jobReachedGloballyTerminalState(archivedExecutionGraph);
 					} else {
@@ -385,9 +385,9 @@ public abstract class Dispatcher extends FencedRpcEndpoint<DispatcherId> impleme
 				}
 			}, getMainThreadExecutor());
 
-		jobManagerRunner.start();
+		jobManagerRunner.start(); //启动
 
-		return jobManagerRunner;
+		return jobManagerRunner; //启动后再返回jobManagerRunner的引用
 	}
 
 	@Override

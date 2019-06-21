@@ -223,11 +223,11 @@ public class ZooKeeperSubmittedJobGraphStore implements SubmittedJobGraphStore {
 
 				if (currentVersion == -1) {
 					try {
-						jobGraphsInZooKeeper.addAndLock(path, jobGraph);
+						jobGraphsInZooKeeper.addAndLock(path, jobGraph); //将jobGraph持久化，并将句柄保存到zk中
 
-						addedJobGraphs.add(jobGraph.getJobId());
+						addedJobGraphs.add(jobGraph.getJobId()); //将jobId保存起来
 
-						success = true;
+						success = true; //返回成功
 					}
 					catch (KeeperException.NodeExistsException ignored) {
 					}
