@@ -48,8 +48,8 @@ import java.util.Optional;
 import static org.apache.flink.util.Preconditions.checkNotNull;
 
 /**
- * Network I/O components of each {@link TaskManager} instance. The network environment contains
- * the data structures that keep track of all intermediate results and all data exchanges.
+ * Network I/O components of each {@link TaskManager} instance. The network environment contains //每个{@link TaskManager}实例的网络I/O 组件
+ * the data structures that keep track of all intermediate results and all data exchanges. //网络环境包含跟踪所有中间状态和所有交换数据的 数据结构
  */
 public class NetworkEnvironment {
 

@@ -29,13 +29,13 @@ import org.apache.flink.runtime.taskmanager.Task;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * A registry for {@link InternalKvState} instances per task manager.
+ * A registry for {@link InternalKvState} instances per task manager. //每个task manager的{@link InternalKvState}实例(注册TaskManager内部状态的)的注册表
  *
- * <p>This is currently only used for KvState queries: KvState instances, which
+ * <p>This is currently only used for KvState queries: KvState instances, which //这当前仅用于KvState查询：在其状态描述符中标记为可查询的KvState实例在此处注册，并且可以由{@link KvStateServer}查询。
  * are marked as queryable in their state descriptor are registered here and
  * can be queried by the {@link KvStateServer}.
  *
- * <p>KvState is registered when it is created/restored and unregistered when
+ * <p>KvState is registered when it is created/restored and unregistered when //KvState当它创建或者restored时被注册，当它自己的operator停止运行时注销
  * the owning operator stops running.
  */
 public class KvStateRegistry {

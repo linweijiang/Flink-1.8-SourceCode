@@ -275,7 +275,7 @@ public abstract class AbstractStreamOperator<OUT>
 				keyedStateInputs, // access to keyed state stream
 				operatorStateInputs); // access to operator state stream
 
-			initializeState(initializationContext);
+			initializeState(initializationContext); //operator级别的state初始化
 		} finally {
 			closeFromRegistry(operatorStateInputs, streamTaskCloseableRegistry);
 			closeFromRegistry(keyedStateInputs, streamTaskCloseableRegistry);

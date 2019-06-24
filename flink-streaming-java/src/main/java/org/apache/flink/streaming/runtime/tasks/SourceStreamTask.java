@@ -35,7 +35,7 @@ import org.apache.flink.util.FlinkException;
  * with the {@link SourceFunction} that it must only modify its state or emit elements in
  * a synchronized block that locks on the lock Object. Also, the modification of the state
  * and the emission of elements must happen in the same block of code that is protected by the
- * synchronized block.
+ * synchronized block. //其中一个重要方面是检查点和元素的发射必须永远不会同时发生。 执行必须是串行的。 这是通过与{@link SourceFunction}签订合同来实现的，它必须只修改其状态或在锁定锁定对象的同步块中发出元素。 此外，状态的修改和元素的发射必须发生在由同步块保护的同一代码块中。
  *
  * @param <OUT> Type of the output elements of this source.
  * @param <SRC> Type of the source function for the stream source operator

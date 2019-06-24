@@ -46,7 +46,7 @@ import java.util.Map;
 import java.util.concurrent.Future;
 
 /**
- * The Environment gives the code executed in a task access to the task's properties
+ * The Environment gives the code executed in a task access to the task's properties //Environment允许在task中执行的代码访问task的属性(如名称、并行度)、配置、数据流读取器和写入器，以及TaskManager提供的各种组件，如内存管理器、I/O管理器、…
  * (such as name, parallelism), the configurations, the data stream readers and writers,
  * as well as the various components that are provided by the TaskManager, such as
  * memory manager, I/O manager, ...

@@ -236,7 +236,7 @@ public abstract class StreamTask<OUT, OP extends StreamOperator<OUT>>
 	}
 
 	@Override
-	public final void invoke() throws Exception {
+	public final void invoke() throws Exception { //subTask开始执行了
 
 		boolean disposed = false;
 		try {
@@ -245,18 +245,18 @@ public abstract class StreamTask<OUT, OP extends StreamOperator<OUT>>
 
 			asyncOperationsThreadPool = Executors.newCachedThreadPool();
 
-			CheckpointExceptionHandlerFactory cpExceptionHandlerFactory = createCheckpointExceptionHandlerFactory();
+			CheckpointExceptionHandlerFactory cpExceptionHandlerFactory = createCheckpointExceptionHandlerFactory(); //创建checkpoint异常处理的工厂
 
 			synchronousCheckpointExceptionHandler = cpExceptionHandlerFactory.createCheckpointExceptionHandler(
 				getExecutionConfig().isFailTaskOnCheckpointError(),
 				getEnvironment());
 
-			asynchronousCheckpointExceptionHandler = new AsyncCheckpointExceptionHandler(this);
+			asynchronousCheckpointExceptionHandler = new AsyncCheckpointExceptionHandler(this); //创建checkpoint异常异步处理器
 
-			stateBackend = createStateBackend();
+			stateBackend = createStateBackend(); //获取stateBackend
 			checkpointStorage = stateBackend.createCheckpointStorage(getEnvironment().getJobID()); //从当前上下文环境通过jobId获取checkpointStorage的信息
 
-			// if the clock is not already set, then assign a default TimeServiceProvider
+			// if the clock is not already set, then assign a default TimeServiceProvider //如果clock还没有设，那么分配一个默认的TimeServiceProvider
 			if (timerService == null) {
 				ThreadFactory timerThreadFactory = new DispatcherThreadFactory(TRIGGER_THREAD_GROUP,
 					"Time Trigger for " + getName(), getUserCodeClassLoader());
@@ -264,8 +264,8 @@ public abstract class StreamTask<OUT, OP extends StreamOperator<OUT>>
 				timerService = new SystemProcessingTimeService(this, getCheckpointLock(), timerThreadFactory);
 			}
 
-			operatorChain = new OperatorChain<>(this, recordWriters);
-			headOperator = operatorChain.getHeadOperator();
+			operatorChain = new OperatorChain<>(this, recordWriters); //创建OperatorChain
+			headOperator = operatorChain.getHeadOperator(); //获得head的Operator
 
 			// task specific initialization
 			init();
@@ -278,16 +278,16 @@ public abstract class StreamTask<OUT, OP extends StreamOperator<OUT>>
 			// -------- Invoke --------
 			LOG.debug("Invoking {}", getName());
 
-			// we need to make sure that any triggers scheduled in open() cannot be
+			// we need to make sure that any triggers scheduled in open() cannot be //我们必须确保在open()中调度的任何触发器的不能在所有的operator被opened之前被执行？
 			// executed before all operators are opened
 			synchronized (lock) {
 
-				// both the following operations are protected by the lock
+				// both the following operations are protected by the lock //以下两个操作都受到锁的保护，因此在initializeState()注册计时器的情况下，我们可以避免竞态条件，该计时器在调用open()之前触发。
 				// so that we avoid race conditions in the case that initializeState()
 				// registers a timer, that fires before the open() is called.
 
-				initializeState();
-				openAllOperators();
+				initializeState(); //获取chain中的每个operator，然后每个operator进行初始化
+				openAllOperators(); //打开operator之间的连接
 			}
 
 			// final check to exit early before starting to run
@@ -297,7 +297,7 @@ public abstract class StreamTask<OUT, OP extends StreamOperator<OUT>>
 
 			// let the task do its work
 			isRunning = true;
-			run();
+			run(); //这里
 
 			// if this left the run() method cleanly despite the fact that this was canceled,
 			// make sure the "clean shutdown" is not attempted

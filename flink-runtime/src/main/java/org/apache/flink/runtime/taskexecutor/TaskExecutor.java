@@ -419,14 +419,14 @@ public class TaskExecutor extends RpcEndpoint implements TaskExecutorGateway {
 	// ----------------------------------------------------------------------
 
 	@Override
-	public CompletableFuture<Acknowledge> submitTask(
+	public CompletableFuture<Acknowledge> submitTask( //提交subTask到taskExecutor，也就是taskManager
 			TaskDeploymentDescriptor tdd,
 			JobMasterId jobMasterId,
 			Time timeout) {
 
 		try {
 			final JobID jobId = tdd.getJobId();
-			final JobManagerConnection jobManagerConnection = jobManagerTable.get(jobId);
+			final JobManagerConnection jobManagerConnection = jobManagerTable.get(jobId); //在jobManager预处理时已经注册了该connection，从下面的非空检验也可以知道
 
 			if (jobManagerConnection == null) {
 				final String message = "Could not submit task because there is no JobManager " +
@@ -463,8 +463,8 @@ public class TaskExecutor extends RpcEndpoint implements TaskExecutorGateway {
 			final JobInformation jobInformation;
 			final TaskInformation taskInformation;
 			try {
-				jobInformation = tdd.getSerializedJobInformation().deserializeValue(getClass().getClassLoader());
-				taskInformation = tdd.getSerializedTaskInformation().deserializeValue(getClass().getClassLoader());
+				jobInformation = tdd.getSerializedJobInformation().deserializeValue(getClass().getClassLoader()); //获取job的信息
+				taskInformation = tdd.getSerializedTaskInformation().deserializeValue(getClass().getClassLoader()); //获取subTask的信息
 			} catch (IOException | ClassNotFoundException e) {
 				throw new TaskSubmissionException("Could not deserialize the job or task information.", e);
 			}
@@ -475,7 +475,7 @@ public class TaskExecutor extends RpcEndpoint implements TaskExecutorGateway {
 						tdd.getJobId() + " vs. " + jobInformation.getJobId() + ")");
 			}
 
-			TaskMetricGroup taskMetricGroup = taskManagerMetricGroup.addTaskForJob(
+			TaskMetricGroup taskMetricGroup = taskManagerMetricGroup.addTaskForJob( //Metrics
 				jobInformation.getJobId(),
 				jobInformation.getJobName(),
 				taskInformation.getJobVertexId(),
@@ -513,7 +513,7 @@ public class TaskExecutor extends RpcEndpoint implements TaskExecutorGateway {
 				taskRestore,
 				checkpointResponder);
 
-			Task task = new Task(
+			Task task = new Task( //new了一个Task
 				jobInformation,
 				taskInformation,
 				tdd.getExecutionAttemptId(),
@@ -546,13 +546,13 @@ public class TaskExecutor extends RpcEndpoint implements TaskExecutorGateway {
 			boolean taskAdded;
 
 			try {
-				taskAdded = taskSlotTable.addTask(task);
+				taskAdded = taskSlotTable.addTask(task); //将task注册到taskTable上，用于监听task是否存活
 			} catch (SlotNotFoundException | SlotNotActiveException e) {
 				throw new TaskSubmissionException("Could not submit task.", e);
 			}
 
 			if (taskAdded) {
-				task.startTaskThread();
+				task.startTaskThread(); //在taskExecution启动task的线程
 
 				return CompletableFuture.completedFuture(Acknowledge.get());
 			} else {

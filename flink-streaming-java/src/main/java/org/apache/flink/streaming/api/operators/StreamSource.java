@@ -63,7 +63,7 @@ public class StreamSource<OUT, SRC extends SourceFunction<OUT>> extends Abstract
 
 		final TimeCharacteristic timeCharacteristic = getOperatorConfig().getTimeCharacteristic();
 
-		final Configuration configuration = this.getContainingTask().getEnvironment().getTaskManagerInfo().getConfiguration();
+		final Configuration configuration = this.getContainingTask().getEnvironment().getTaskManagerInfo().getConfiguration(); //获得taskManager的conf
 		final long latencyTrackingInterval = getExecutionConfig().isLatencyTrackingConfigured()
 			? getExecutionConfig().getLatencyTrackingInterval()
 			: configuration.getLong(MetricOptions.LATENCY_INTERVAL);
@@ -78,9 +78,9 @@ public class StreamSource<OUT, SRC extends SourceFunction<OUT>> extends Abstract
 				getRuntimeContext().getIndexOfThisSubtask());
 		}
 
-		final long watermarkInterval = getRuntimeContext().getExecutionConfig().getAutoWatermarkInterval();
+		final long watermarkInterval = getRuntimeContext().getExecutionConfig().getAutoWatermarkInterval(); //Watermark
 
-		this.ctx = StreamSourceContexts.getSourceContext(
+		this.ctx = StreamSourceContexts.getSourceContext( //获得source ctx
 			timeCharacteristic,
 			getProcessingTimeService(),
 			lockingObject,
@@ -90,7 +90,7 @@ public class StreamSource<OUT, SRC extends SourceFunction<OUT>> extends Abstract
 			-1);
 
 		try {
-			userFunction.run(ctx);
+			userFunction.run(ctx); //这里。至此，job的提交的源码算是完成了（TO-DO：接下来的等job划分graph的源码看完后才能继续）
 
 			// if we get here, then the user function either exited after being done (finite source)
 			// or the function was canceled or stopped. For the finite source case, we should emit

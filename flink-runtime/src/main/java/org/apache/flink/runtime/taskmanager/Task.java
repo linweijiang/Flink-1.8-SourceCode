@@ -103,24 +103,24 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
 import static org.apache.flink.util.Preconditions.checkState;
 
 /**
- * The Task represents one execution of a parallel subtask on a TaskManager.
- * A Task wraps a Flink operator (which may be a user function) and
- * runs it, providing all services necessary for example to consume input data,
- * produce its results (intermediate result partitions) and communicate
+ * The Task represents one execution of a parallel subtask on a TaskManager. //Task代表在TaskManager上执行的一个并行的subTask
+ * A Task wraps a Flink operator (which may be a user function) and //一个Task封装了一个Flink operator(可能是一个用户的功能)并且运行它
+ * runs it, providing all services necessary for example to consume input data, //并且提供所有的必须的services，比如消费input的数据、output它的结果(中间结果分区)
+ * produce its results (intermediate result partitions) and communicate //并且和JobManager通信
  * with the JobManager.
  *
- * <p>The Flink operators (implemented as subclasses of
+ * <p>The Flink operators (implemented as subclasses of //Flink的operators（作为{@link AbstractInvokable}的子类）仅仅只有data readers、writers、和具体的事件回调
  * {@link AbstractInvokable} have only data readers, -writers, and certain event callbacks.
- * The task connects those to the network stack and actor messages, and tracks the state
+ * The task connects those to the network stack and actor messages, and tracks the state //这些task连接到网络堆栈和actor的消息，并且追踪执行的状态和处理异常
  * of the execution and handles exceptions.
  *
- * <p>Tasks have no knowledge about how they relate to other tasks, or whether they
+ * <p>Tasks have no knowledge about how they relate to other tasks, or whether they //Task不知道他们个其他tasks之间的关系，并且他们不知道它们是否是第一次执行还是 重新执行，所有的这些只有JobManager知道
  * are the first attempt to execute the task, or a repeated attempt. All of that
- * is only known to the JobManager. All the task knows are its own runnable code,
+ * is only known to the JobManager. All the task knows are its own runnable code, //所有的task知道他们自己的runnable里的代码、task的配置和要consume和produce的中间结果的IDs（如果有的话）
  * the task's configuration, and the IDs of the intermediate results to consume and
  * produce (if any).
  *
- * <p>Each Task is run by one dedicated thread.
+ * <p>Each Task is run by one dedicated thread. //每个Task由一个专门的线程执行
  */
 public class Task implements Runnable, TaskActions, CheckpointListener {
 
@@ -216,7 +216,7 @@ public class Task implements Runnable, TaskActions, CheckpointListener {
 	/** The cache for user-defined files that the invokable requires. */
 	private final FileCache fileCache;
 
-	/** The gateway to the network stack, which handles inputs and produced results. */
+	/** The gateway to the network stack, which handles inputs and produced results. */ //用于network stack的网关，该gateway是处理input和输出results的
 	private final NetworkEnvironment network;
 
 	/** The registry of this task which enables live reporting of accumulators. */
@@ -248,7 +248,7 @@ public class Task implements Runnable, TaskActions, CheckpointListener {
 	@Nullable
 	private volatile AbstractInvokable invokable;
 
-	/** The current execution state of the task. */
+	/** The current execution state of the task. */ //当前task的执行状态
 	private volatile ExecutionState executionState = ExecutionState.CREATED;
 
 	/** The observed exception, in case the task execution failed. */
@@ -522,26 +522,26 @@ public class Task implements Runnable, TaskActions, CheckpointListener {
 	}
 
 	/**
-	 * The core work method that bootstraps the task and executes its code.
+	 * The core work method that bootstraps the task and executes its code. //引导task并且执行核心代码的方法
 	 */
 	@Override
 	public void run() {
 
 		// ----------------------------
-		//  Initial State transition
+		//  Initial State transition //初始化state的转换
 		// ----------------------------
 		while (true) {
-			ExecutionState current = this.executionState;
+			ExecutionState current = this.executionState; //获取当前Task的状态
 			if (current == ExecutionState.CREATED) {
 				if (transitionState(ExecutionState.CREATED, ExecutionState.DEPLOYING)) {
-					// success, we can start our work
+					// success, we can start our work //只有这个state我们才接着往下走
 					break;
 				}
 			}
 			else if (current == ExecutionState.FAILED) {
-				// we were immediately failed. tell the TaskManager that we reached our final state
+				// we were immediately failed. tell the TaskManager that we reached our final state //如果已经是Failed，告诉TaskManager该task已经到达终点state了
 				notifyFinalState();
-				if (metrics != null) {
+				if (metrics != null) { //关闭当前Metrics
 					metrics.close();
 				}
 				return;
@@ -564,8 +564,8 @@ public class Task implements Runnable, TaskActions, CheckpointListener {
 			}
 		}
 
-		// all resource acquisitions and registrations from here on
-		// need to be undone in the end
+		// all resource acquisitions and registrations from here on //从这里开始所有资源的获取和注册
+		// need to be undone in the end //最后需要释放这些资源
 		Map<String, Future<Path>> distributedCacheEntries = new HashMap<>();
 		AbstractInvokable invokable = null;
 
@@ -575,14 +575,14 @@ public class Task implements Runnable, TaskActions, CheckpointListener {
 			//  check for canceling as a shortcut
 			// ----------------------------
 
-			// activate safety net for task thread
+			// activate safety net for task thread //为它深刻地线程激活 网络安全机制
 			LOG.info("Creating FileSystem stream leak safety net for task {}", this);
 			FileSystemSafetyNet.initializeSafetyNetForThread();
 
-			blobService.getPermanentBlobService().registerJob(jobId);
+			blobService.getPermanentBlobService().registerJob(jobId); //注册job到blobService
 
-			// first of all, get a user-code classloader
-			// this may involve downloading the job's JAR files and/or classes
+			// first of all, get a user-code classloader //首先，获取 user-code的类加载器
+			// this may involve downloading the job's JAR files and/or classes //这个可能涉及下载job的JAR文件 和/或者 classes(具体看该类是否已经在JobManager上了，提交Job时有对这个这个进行判断)
 			LOG.info("Loading JAR files for task {}.", this);
 
 			userCodeClassLoader = createUserCodeClassloader();
@@ -603,20 +603,20 @@ public class Task implements Runnable, TaskActions, CheckpointListener {
 			}
 
 			// ----------------------------------------------------------------
-			// register the task with the network stack
-			// this operation may fail if the system does not have enough
+			// register the task with the network stack //使用network stack注册task
+			// this operation may fail if the system does not have enough //如果系统没有足够的内存来处理必要的数据交换，那么这个operation可能会失败
 			// memory to run the necessary data exchanges
-			// the registration must also strictly be undone
+			// the registration must also strictly be undone //这个注册也必须要严格的撤消
 			// ----------------------------------------------------------------
 
 			LOG.info("Registering task at network: {}.", this);
 
-			network.registerTask(this);
+			network.registerTask(this); //到TaskManager的network中注册该task
 
-			// add metrics for buffers
+			// add metrics for buffers //为buffers添加Metrics
 			this.metrics.getIOMetricGroup().initializeBufferMetrics(this);
 
-			// register detailed network metrics, if configured
+			// register detailed network metrics, if configured //如果配置了的话，那么注册详细的网络Metrics
 			if (taskManagerConfig.getConfiguration().getBoolean(TaskManagerOptions.NETWORK_DETAILED_METRICS)) {
 				// similar to MetricUtils.instantiateNetworkMetrics() but inside this IOMetricGroup
 				MetricGroup networkGroup = this.metrics.getIOMetricGroup().addGroup("Network");
@@ -635,10 +635,10 @@ public class Task implements Runnable, TaskActions, CheckpointListener {
 				}
 			}
 
-			// next, kick off the background copying of files for the distributed cache
+			// next, kick off the background copying of files for the distributed cache //接下来，为分布式缓存 开始后台的文件复制操作？
 			try {
 				for (Map.Entry<String, DistributedCache.DistributedCacheEntry> entry :
-						DistributedCache.readFileInfoFromConfig(jobConfiguration)) {
+						DistributedCache.readFileInfoFromConfig(jobConfiguration)) { //除了广播变量之类的，正常的job提交是没有的
 					LOG.info("Obtaining local cache file for '{}'.", entry.getKey());
 					Future<Path> cp = fileCache.createTmpFile(entry.getKey(), entry.getValue(), jobId, executionId);
 					distributedCacheEntries.put(entry.getKey(), cp);
@@ -654,12 +654,12 @@ public class Task implements Runnable, TaskActions, CheckpointListener {
 			}
 
 			// ----------------------------------------------------------------
-			//  call the user code initialization methods
+			//  call the user code initialization methods //调用用户的方法初始化方法
 			// ----------------------------------------------------------------
 
-			TaskKvStateRegistry kvStateRegistry = network.createKvStateTaskRegistry(jobId, getJobVertexId());
+			TaskKvStateRegistry kvStateRegistry = network.createKvStateTaskRegistry(jobId, getJobVertexId()); //注册到KvStateRegistry
 
-			Environment env = new RuntimeEnvironment(
+			Environment env = new RuntimeEnvironment(//各种资源的环境，包括网络、内存等
 				jobId,
 				vertexId,
 				executionId,
@@ -685,29 +685,29 @@ public class Task implements Runnable, TaskActions, CheckpointListener {
 				metrics,
 				this);
 
-			// now load and instantiate the task's invokable code
-			invokable = loadAndInstantiateInvokable(userCodeClassLoader, nameOfInvokableClass, env);
+			// now load and instantiate the task's invokable code //现在加载并实例化task的invokable代码
+			invokable = loadAndInstantiateInvokable(userCodeClassLoader, nameOfInvokableClass, env); //将相关环境的配置 设置到task的需要执行的类中
 
 			// ----------------------------------------------------------------
 			//  actual task core work
 			// ----------------------------------------------------------------
 
-			// we must make strictly sure that the invokable is accessible to the cancel() call
+			// we must make strictly sure that the invokable is accessible to the cancel() call //我们必须严格确保在切换到运行时invokable可以被调用cancel()。
 			// by the time we switched to running.
 			this.invokable = invokable;
 
-			// switch to the RUNNING state, if that fails, we have been canceled/failed in the meantime
+			// switch to the RUNNING state, if that fails, we have been canceled/failed in the meantime //转换成RUNNING，如果失败，则在此期间转换成canceled/failed
 			if (!transitionState(ExecutionState.DEPLOYING, ExecutionState.RUNNING)) {
 				throw new CancelTaskException();
 			}
 
 			// notify everyone that we switched to running
-			taskManagerActions.updateTaskExecutionState(new TaskExecutionState(jobId, executionId, ExecutionState.RUNNING));
+			taskManagerActions.updateTaskExecutionState(new TaskExecutionState(jobId, executionId, ExecutionState.RUNNING)); //转换成RUNNING了
 
-			// make sure the user code classloader is accessible thread-locally
+			// make sure the user code classloader is accessible thread-locally //确保用户的代码加载器在本地线程是可以访问的
 			executingThread.setContextClassLoader(userCodeClassLoader);
 
-			// run the invokable
+			// run the invokable //执行代码，开始执行subTask
 			invokable.invoke();
 
 			// make sure, we enter the catch block if the task leaves the invoke() method due
@@ -733,7 +733,7 @@ public class Task implements Runnable, TaskActions, CheckpointListener {
 				throw new CancelTaskException();
 			}
 		}
-		catch (Throwable t) {
+		catch (Throwable t) { //后续的一大篇都是catch、finally异常处理和释放资源的，先不看先
 
 			// unwrap wrapped exceptions to make stack traces more compact
 			if (t instanceof WrappingRuntimeException) {
@@ -875,8 +875,8 @@ public class Task implements Runnable, TaskActions, CheckpointListener {
 	}
 
 	private void notifyFinalState() {
-		checkState(executionState.isTerminal());
-		taskManagerActions.updateTaskExecutionState(new TaskExecutionState(jobId, executionId, executionState, failureCause));
+		checkState(executionState.isTerminal()); //查看Task(Execution)是否到了终点了
+		taskManagerActions.updateTaskExecutionState(new TaskExecutionState(jobId, executionId, executionState, failureCause)); //告诉TaskManager当前Task的状态
 	}
 
 	private void notifyFatalError(String message, Throwable cause) {
@@ -1362,7 +1362,7 @@ public class Task implements Runnable, TaskActions, CheckpointListener {
 	}
 
 	/**
-	 * Instantiates the given task invokable class, passing the given environment (and possibly
+	 * Instantiates the given task invokable class, passing the given environment (and possibly //实例化给定的task的 invokable的类，将给定的环境(可能还有初始任务状态)传递给task的构造函数。
 	 * the initial task state) to the task's constructor.
 	 *
 	 * <p>The method will first try to instantiate the task via a constructor accepting both

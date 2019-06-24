@@ -635,7 +635,7 @@ public class Execution implements AccessExecution, Archiveable<ArchivedExecution
 
 			// We run the submission in the future executor so that the serialization of large TDDs does not block //我们在将来的执行程序中运行提交？，以便大型TDD的序列化不会阻塞
 			// the main thread and sync back to the main thread once submission is completed. //一旦提交完成，主线程和异步线程就会同步回主线程。
-			CompletableFuture.supplyAsync(() -> taskManagerGateway.submitTask(deployment, rpcTimeout), executor) //提交subTask到taskManager中，从这里之后任务就提交到taskManager中了
+			CompletableFuture.supplyAsync(() -> taskManagerGateway.submitTask(deployment, rpcTimeout), executor) //提交subTask到taskManager中，从这里之后任务就提交到taskManager中了。到org.apache.flink.runtime.jobmaster.RpcTaskManagerGateway.submitTask这里
 				.thenCompose(Function.identity())
 				.whenCompleteAsync(
 					(ack, failure) -> {
