@@ -99,8 +99,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A DataStream represents a stream of elements of the same type. A DataStream
- * can be transformed into another DataStream by applying a transformation as
+ * A DataStream represents a stream of elements of the same type. A DataStream //一个DataStream代表一个相同类型的stream。
+ * can be transformed into another DataStream by applying a transformation as //一个DataStream能够通过一些操作转换成其他的DataStream
  * for example:
  * <ul>
  * <li>{@link DataStream#map}
@@ -1160,7 +1160,7 @@ public class DataStream<T> {
 	}
 
 	/**
-	 * Method for passing user defined operators along with the type
+	 * Method for passing user defined operators along with the type //用于传递用户定义的操作符以及将会转换DataStream的类型信息 的方法（其实就是转化数据流，包括处理的方法以及返回值类型）
 	 * information that will transform the DataStream.
 	 *
 	 * @param operatorName
@@ -1179,19 +1179,19 @@ public class DataStream<T> {
 		// read the output type of the input Transform to coax out errors about MissingTypeInfo
 		transformation.getOutputType();
 
-		OneInputTransformation<T, R> resultTransform = new OneInputTransformation<>(
-				this.transformation,
+		OneInputTransformation<T, R> resultTransform = new OneInputTransformation<>( //这里的都是OneInputTransformation
+				this.transformation, //在执行这个方法时还没生成我们要的算子，所以这个transformation表示当前操作的上个操作。比如WordCount中如果是flatMap的话对应的是Source
 				operatorName,
-				operator,
+				operator, //当前的操作，比如上面里的flatMap的话就是flatMap里的逻辑
 				outTypeInfo,
-				environment.getParallelism());
+				environment.getParallelism()); //从上面可以看到，一个Transformation包含着当前和上个Transformation，是关联在一个类里的
 
 		@SuppressWarnings({ "unchecked", "rawtypes" })
-		SingleOutputStreamOperator<R> returnStream = new SingleOutputStreamOperator(environment, resultTransform);
+		SingleOutputStreamOperator<R> returnStream = new SingleOutputStreamOperator(environment, resultTransform); //再通过env和Transform生成新的DataStream
 
-		getExecutionEnvironment().addOperator(resultTransform);
+		getExecutionEnvironment().addOperator(resultTransform); //再将该操作Transform添加到env中，注意，Transform有包含该Transform的source DataStream
 
-		return returnStream;
+		return returnStream; //再将新生成的DataStream返回
 	}
 
 	/**

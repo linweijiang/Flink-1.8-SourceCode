@@ -48,7 +48,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A generator that generates a {@link StreamGraph} from a graph of
+ * A generator that generates a {@link StreamGraph} from a graph of //从StreamTransformations生成StreamGraph的生成器
  * {@link StreamTransformation StreamTransformations}.
  *
  * <p>This traverses the tree of {@code StreamTransformations} starting from the sinks. At each
@@ -120,12 +120,12 @@ public class StreamGraphGenerator {
 	 *
 	 * @return The generated {@code StreamGraph}
 	 */
-	public static StreamGraph generate(StreamExecutionEnvironment env, List<StreamTransformation<?>> transformations) {
-		return new StreamGraphGenerator(env).generateInternal(transformations);
+	public static StreamGraph generate(StreamExecutionEnvironment env, List<StreamTransformation<?>> transformations) { //从这里生成StreamGraph
+		return new StreamGraphGenerator(env).generateInternal(transformations); //通过env得到StreamGraphGenerator，由该生成器生成StreamGraph
 	}
 
 	/**
-	 * This starts the actual transformation, beginning from the sinks.
+	 * This starts the actual transformation, beginning from the sinks. //从sinks端开始真实的转换
 	 */
 	private StreamGraph generateInternal(List<StreamTransformation<?>> transformations) {
 		for (StreamTransformation<?> transformation: transformations) {
@@ -137,8 +137,8 @@ public class StreamGraphGenerator {
 	/**
 	 * Transforms one {@code StreamTransformation}.
 	 *
-	 * <p>This checks whether we already transformed it and exits early in that case. If not it
-	 * delegates to one of the transformation specific methods.
+	 * <p>This checks whether we already transformed it and exits early in that case. If not it //这个检查我们是否已经转换了并且在那种情况下提前退出。
+	 * delegates to one of the transformation specific methods. //如果不是的，将会委托其中的一个transformation方法
 	 */
 	private Collection<Integer> transform(StreamTransformation<?> transform) {
 
@@ -190,7 +190,7 @@ public class StreamGraphGenerator {
 
 		// need this check because the iterate transformation adds itself before
 		// transforming the feedback edges
-		if (!alreadyTransformed.containsKey(transform)) {
+		if (!alreadyTransformed.containsKey(transform)) { //使用递归的方式来处理operator，然后如果处理过了，那么就记录在alreadyTransformed中，方式重复添加transform
 			alreadyTransformed.put(transform, transformedIds);
 		}
 
@@ -241,7 +241,7 @@ public class StreamGraphGenerator {
 		Collection<Integer> transformedIds = transform(input);
 		for (Integer transformedId: transformedIds) {
 			int virtualId = StreamTransformation.getNewNodeId();
-			streamGraph.addVirtualPartitionNode(transformedId, virtualId, partition.getPartitioner());
+			streamGraph.addVirtualPartitionNode(transformedId, virtualId, partition.getPartitioner()); //PartitionTransformation的添加的是虚拟的节点
 			resultIds.add(virtualId);
 		}
 
@@ -529,7 +529,7 @@ public class StreamGraphGenerator {
 	 */
 	private <IN, OUT> Collection<Integer> transformOneInputTransform(OneInputTransformation<IN, OUT> transform) {
 
-		Collection<Integer> inputIds = transform(transform.getInput());
+		Collection<Integer> inputIds = transform(transform.getInput());//每个transform都有设置input
 
 		// the recursive call might have already transformed this
 		if (alreadyTransformed.containsKey(transform)) {
@@ -555,7 +555,7 @@ public class StreamGraphGenerator {
 		streamGraph.setMaxParallelism(transform.getId(), transform.getMaxParallelism());
 
 		for (Integer inputId: inputIds) {
-			streamGraph.addEdge(inputId, transform.getId(), 0);
+			streamGraph.addEdge(inputId, transform.getId(), 0); //对于input，添加edge
 		}
 
 		return Collections.singleton(transform.getId());

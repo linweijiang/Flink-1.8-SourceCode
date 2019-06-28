@@ -31,15 +31,15 @@ import org.apache.flink.util.Disposable;
 import java.io.Serializable;
 
 /**
- * Basic interface for stream operators. Implementers would implement one of
- * {@link org.apache.flink.streaming.api.operators.OneInputStreamOperator} or
+ * Basic interface for stream operators. Implementers would implement one of //该接口是stream operators的底层接口。
+ * {@link org.apache.flink.streaming.api.operators.OneInputStreamOperator} or //实现类应该实现OneInputStreamOperator或TwoInputStreamOperator中的一个，从而去处理数据
  * {@link org.apache.flink.streaming.api.operators.TwoInputStreamOperator} to create operators
  * that process elements.
  *
- * <p>The class {@link org.apache.flink.streaming.api.operators.AbstractStreamOperator}
+ * <p>The class {@link org.apache.flink.streaming.api.operators.AbstractStreamOperator} //AbstractStreamOperator类提供了一些默认 生命周期和方法配置 的实现
  * offers default implementation for the lifecycle and properties methods.
  *
- * <p>Methods of {@code StreamOperator} are guaranteed not to be called concurrently. Also, if using
+ * <p>Methods of {@code StreamOperator} are guaranteed not to be called concurrently. Also, if using //StreamOperator的方法保证不被并发的调用。同时 如果使用了timer service，timer的回调也能保证不被并发的调用
  * the timer service, timer callbacks are also guaranteed not to be called concurrently with
  * methods on {@code StreamOperator}.
  *

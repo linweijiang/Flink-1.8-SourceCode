@@ -40,18 +40,18 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
  * A {@code StreamTransformation} represents the operation that creates a
  * {@link org.apache.flink.streaming.api.datastream.DataStream}. Every
  * {@link org.apache.flink.streaming.api.datastream.DataStream} has an underlying
- * {@code StreamTransformation} that is the origin of said DataStream.
+ * {@code StreamTransformation} that is the origin of said DataStream.  //StreamTransformation代表创建DataStream的操作，每个DataStream底层都有StreamTransformation，StreamTransformation是DataStream的起源
  *
  * <p>API operations such as {@link org.apache.flink.streaming.api.datastream.DataStream#map} create
  * a tree of {@code StreamTransformation}s underneath. When the stream program is to be executed
  * this graph is translated to a {@link StreamGraph} using
- * {@link org.apache.flink.streaming.api.graph.StreamGraphGenerator}.
+ * {@link org.apache.flink.streaming.api.graph.StreamGraphGenerator}. //像map这样的API操作在底层创建了一个StreamTransformation树，当stream的程序开始执行时，该graph通过StreamGraphGenerator将被转换成StreamGraph
  *
  * <p>A {@code StreamTransformation} does not necessarily correspond to a physical operation
  * at runtime. Some operations are only logical concepts. Examples of this are union,
- * split/select data stream, partitioning.
+ * split/select data stream, partitioning. //StreamTransformation在执行时没有必要和一个物理操作有对应关系，一些操作仅仅只是逻辑上的概念。比如union/split/select/partition
  *
- * <p>The following graph of {@code StreamTransformations}:
+ * <p>The following graph of {@code StreamTransformations}: //该图看https://ci.apache.org/projects/flink/flink-docs-release-1.8/api/java/
  * <pre>{@code
  *   Source              Source
  *      +                   +
@@ -122,7 +122,7 @@ public abstract class StreamTransformation<T> {
 	private int parallelism;
 
 	/**
-	 * The maximum parallelism for this stream transformation. It defines the upper limit for
+	 * The maximum parallelism for this stream transformation. It defines the upper limit for //是否有设置并行度的最大值，默认是不限制的
 	 * dynamic scaling and the number of key groups used for partitioned state.
 	 */
 	private int maxParallelism = -1;

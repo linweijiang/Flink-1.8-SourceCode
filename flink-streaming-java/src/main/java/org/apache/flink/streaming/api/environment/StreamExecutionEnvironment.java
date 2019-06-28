@@ -1574,7 +1574,7 @@ public abstract class StreamExecutionEnvironment {
 	@Internal
 	public void addOperator(StreamTransformation<?> transformation) {
 		Preconditions.checkNotNull(transformation, "transformation must not be null.");
-		this.transformations.add(transformation);
+		this.transformations.add(transformation); //将每个transformation添加到List<StreamTransformation<?>>中
 	}
 
 	// --------------------------------------------------------------------------------------------

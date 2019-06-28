@@ -75,7 +75,7 @@ public class WordCount {
 			// split up the lines in pairs (2-tuples) containing: (word,1)
 			text.flatMap(new Tokenizer())
 			// group by the tuple field "0" and sum up tuple field "1"
-			.keyBy(0).sum(1);
+			.keyBy(0).sum(1); //keyBy没有生成StreamNode，只是说明了数据如何分发 //sum底层也是个聚合函数，也有调用的transformation
 
 		// emit result
 		if (params.has("output")) {
@@ -84,9 +84,30 @@ public class WordCount {
 			System.out.println("Printing result to stdout. Use --output to specify output path.");
 			counts.print();
 		}
+		//============================================================
+		//DataStream 代表的数据
+		//StreamOperator 代表数据的处理器
+		//StreamTransformation 代表数据的转换，即生成新的DataStream
+		//
+		//关系：
+		// 每个DataStream包含数据的处理方式，即StreamOperator，从源码也可以看出 DataStream包含 StreamExecutionEnvironment、StreamTransformation两个属性
+		//============================================================
+
+		//============================================================
+		// 每个算子比如flatMap，操作后生成一个新的DataDream，新生成的DataStream包含上个算子的引用，比如flatMap对应的就是fromElements source，
+		// 每次new 一个DataStream时会给每个算子设置一个自增的ID，并且持有上个算子的引用
+		// 这样从sink端就可以向上遍历获取所有算子
+		//============================================================
+
+		//============================================================
+		//现在有个问题：就是env怎么知道的算子，因为没有显示的设置？
+		//  因为source操作是在env生成的，生成的DataStream里有包含env的引用，后续再通过source生成一系列DataStream都有包含该evn的引用
+		//  所以当执行env.execute()时，所有有用的信息都已经包含在env里了（ps：这难道就是所谓的包装模式？哈哈）
+		//============================================================
 
 		// execute program
 		env.execute("Streaming WordCount");
+//		System.out.println(env.getExecutionPlan());
 	}
 
 	// *************************************************************************

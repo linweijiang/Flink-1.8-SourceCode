@@ -98,7 +98,7 @@ public class StreamGraph extends StreamingPlan {
 	private StateBackend stateBackend;
 	private Set<Tuple2<StreamNode, StreamNode>> iterationSourceSinkPairs;
 
-	public StreamGraph(StreamExecutionEnvironment environment) {
+	public StreamGraph(StreamExecutionEnvironment environment) { //将env的配置设置到StreamGraph中
 		this.environment = environment;
 		this.executionConfig = environment.getConfig();
 		this.checkpointConfig = environment.getCheckpointConfig();
